@@ -1,0 +1,20 @@
+{
+  "name": "heroku-cors-proxy",
+  "version": "1.0.0",
+  "description": "Simple CORS proxy to forward static payloads to a webhook",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js"
+  },
+  "dependencies": {
+    "axios": "^1.7.7",
+    "cors": "^2.8.5",
+    "express": "^4.18.2"
+  },
+  "engines": {
+    "node": ">=12.18.0"
+  },
+  "license": "MIT"
+}
+
+
