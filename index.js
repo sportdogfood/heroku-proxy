@@ -7,22 +7,25 @@ app.use(express.json());
 
 // CORS middleware
 app.use((req, res, next) => {
-  // Allow requests from your domain
-  const allowedOrigins = ['https://www.sportdogfood.com', 'https://sportdogfood.com'];
-  const origin = req.headers.origin;
-  if (allowedOrigins.includes(origin)) {
-    res.setHeader('Access-Control-Allow-Origin', origin);
-  } else {
-    // Optionally, you can log or handle disallowed origins
-    console.log(`Disallowed origin: ${origin}`);
-  }
-  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
-  if (req.method === 'OPTIONS') {
-    return res.sendStatus(204);
-  }
-  next();
-});
+    const origin = req.headers.origin;
+  
+    if (origin && allowedOrigins.includes(origin)) {
+      res.setHeader('Access-Control-Allow-Origin', origin);
+    } else {
+      // Optionally, you can choose to set the header to a default value or not set it at all
+      // res.setHeader('Access-Control-Allow-Origin', 'null'); // Not recommended for security reasons
+      console.log(`Disallowed or undefined origin: ${origin}`);
+    }
+  
+    res.setHeader('Vary', 'Origin');
+    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+  
+    if (req.method === 'OPTIONS') {
+      return res.sendStatus(204);
+    }
+    next();
+  });
 
 // Proxy endpoint
 app.all('/proxy', async (req, res) => {
