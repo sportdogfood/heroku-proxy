@@ -4,15 +4,10 @@ const cors = require('cors');
 
 const app = express();
 
-// Middleware to parse JSON bodies
-app.use(express.json());
-
-// CORS configuration
+// 1. CORS Configuration
 const allowedOrigins = [
   'https://www.sportdogfood.com',
-  'https://sportdogfood.com',
-  'http://www.sportdogfood.com',
-  'http://sportdogfood.com'
+  'https://sportdogfood.com'
 ];
 
 const corsOptions = {
@@ -30,13 +25,16 @@ const corsOptions = {
   allowedHeaders: ['Content-Type', 'Authorization']
 };
 
-// Apply CORS middleware
+// 2. Apply CORS Middleware Before Any Routes
 app.use(cors(corsOptions));
 
-// Handle preflight OPTIONS requests
+// 3. Middleware to Parse JSON Bodies
+app.use(express.json());
+
+// 4. Handle Preflight OPTIONS Requests
 app.options('*', cors(corsOptions));
 
-// Proxy endpoint
+// 5. Proxy Endpoint
 app.post('/proxy', async (req, res) => {
   try {
     // Define the static payload
@@ -53,7 +51,7 @@ app.post('/proxy', async (req, res) => {
 
     // Query parameters for the target webhook
     const params = {
-      zapikey: '1001.946854075052a0c11090978c62d7ac49.44750e9a2e205fca9fa9e9bcd2d2c742', // **Replace with your actual zapikey**
+      zapikey: process.env.ZAPIKEY || '1001.946854075052a0c11090978c62d7ac49.44750e9a2e205fca9fa9e9bcd2d2c742', // **Use environment variable or default**
       isdebug: false
     };
 
@@ -84,10 +82,10 @@ app.post('/proxy', async (req, res) => {
   }
 });
 
-// Handle favicon.ico requests to prevent unnecessary logs
+// 6. Handle favicon.ico Requests to Prevent Unnecessary Logs
 app.get('/favicon.ico', (req, res) => res.sendStatus(204));
 
-// Start the server
+// 7. Start the Server
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`Proxy server running on port ${PORT}`);

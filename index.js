@@ -1,6 +1,7 @@
 const express = require('express');
 const axios = require('axios');
 const cors = require('cors');
+require('dotenv').config();
 
 const app = express();
 
@@ -28,7 +29,7 @@ const corsOptions = {
       callback(new Error('Not allowed by CORS'));
     }
   },
-  methods: ['GET', 'POST', 'OPTIONS'],
+  methods: ['POST', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization']
 };
 
@@ -39,39 +40,46 @@ app.use(cors(corsOptions));
 app.options('*', cors(corsOptions));
 
 // Proxy endpoint
-app.all('/proxy', async (req, res) => {
+app.post('/proxy', async (req, res) => {
   try {
-    const { thisValue } = req.query;
+    // **Removed staticPayload**
+    // Instead, retrieve the payload from the client's request body
+    const clientPayload = req.body;
 
-    if (!thisValue) {
-      return res.status(400).json({ success: false, message: "'thisValue' parameter is missing." });
+    // Validate the received payload (optional but recommended)
+    if (!clientPayload || typeof clientPayload !== 'object') {
+      return res.status(400).json({ success: false, message: "Invalid payload provided." });
     }
 
-    // Forward the request to the target API
-    const apiResponse = await axios({
-      method: req.method,
-      url: 'https://flow.zoho.com/681603876/flow/webhook/incoming', // Adjusted to the actual target API
-      params: {
-        zapikey: '1001.946854075052a0c11090978c62d7ac49.44750e9a2e205fca9fa9e9bcd2d2c742',
-        isdebug: false
-      },
-      data: req.body,
+    // Define target webhook URL
+    const targetWebhookURL = 'https://flow.zoho.com/681603876/flow/webhook/incoming'; // Replace with your actual webhook URL
+
+    // Query parameters for the target webhook
+    const params = {
+      zapikey: process.env.ZAPIKEY || '1001.946854075052a0c11090978c62d7ac49.44750e9a2e205fca9fa9e9bcd2d2c742', // Replace with your actual zapikey or use environment variable
+      isdebug: false
+    };
+
+    // Send POST request to target webhook with the client's payload
+    const response = await axios.post(targetWebhookURL, clientPayload, {
+      params: params,
       headers: {
         'Content-Type': 'application/json'
       },
       timeout: 30000 // 30 seconds timeout
     });
 
-    res.status(apiResponse.status).json(apiResponse.data);
+    // Forward response from webhook to client
+    res.status(response.status).json(response.data);
   } catch (error) {
     console.error("Proxy error:", error.message);
 
     if (error.response) {
-      // Forward the error response from the API
+      // Forward the error response from the target webhook
       res.status(error.response.status).json(error.response.data);
     } else if (error.request) {
-      // No response received
-      res.status(500).json({ success: false, message: "No response received from target API." });
+      // No response received from target webhook
+      res.status(500).json({ success: false, message: "No response received from target webhook." });
     } else {
       // Other errors
       res.status(500).json({ success: false, message: error.message });

@@ -1,11 +1,10 @@
 {
-  "name": "heroku-proxy",
+  "name": "heroku-cors-proxy",
   "version": "1.0.0",
-  "description": "Proxy server to handle CORS and forward requests",
+  "description": "Simple CORS proxy to forward static payloads to a webhook",
   "main": "index.js",
   "scripts": {
-    "start": "node index.js",
-    "test": "echo \"No tests specified\" && exit 1"
+    "start": "node index.js"
   },
   "dependencies": {
     "axios": "^1.7.7",
@@ -15,7 +14,7 @@
   "engines": {
     "node": ">=12.18.0"
   },
-  "license": "ISC"
+  "license": "MIT"
 }
 
 
