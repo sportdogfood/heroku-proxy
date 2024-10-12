@@ -13,7 +13,8 @@ const allowedOrigins = [
   'https://www.sportdogfood.com',
   'https://sportdogfood.com',
   'http://www.sportdogfood.com',
-  'http://sportdogfood.com'
+  'http://sportdogfood.com',
+  'https://secure.sportdogfood.com'  // Added the secure subdomain
 ];
 
 const corsOptions = {
@@ -29,8 +30,8 @@ const corsOptions = {
       callback(new Error('Not allowed by CORS'));
     }
   },
-  methods: ['POST', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization']
+  methods: ['POST', 'GET', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'fx-customer']  // Allow fx-customer in headers
 };
 
 // Use the CORS middleware
@@ -39,28 +40,48 @@ app.use(cors(corsOptions));
 // Handle preflight OPTIONS request
 app.options('*', cors(corsOptions));
 
-// Proxy endpoint
+// Route to fetch customer data using fx.customer token from headers
+app.get('/proxy/customer', async (req, res) => {
+  const apiUrl = "https://secure.sportdogfood.com/s/customer?sso=true&zoom=default_billing_address,default_shipping_address,default_payment_method,subscriptions,subscriptions:transactions,transactions,transactions:items";
+
+  // Retrieve fx.customer token from client request headers
+  const fxCustomerToken = req.headers['fx-customer'];
+
+  if (!fxCustomerToken) {
+    return res.status(400).json({ message: "fx.customer token is required" });
+  }
+
+  const headers = {
+    "fx.customer": fxCustomerToken,  // Use the token passed from the client
+    "Content-Type": "application/json",
+    "Accept": "*/*",
+    "Accept-Language": "en-US,en;q=0.9"
+  };
+
+  try {
+    const response = await axios.get(apiUrl, { headers });
+    res.status(200).json(response.data);
+  } catch (error) {
+    console.error("Error fetching customer data:", error.message);
+    res.status(500).json({ message: "Error fetching customer data", error: error.message });
+  }
+});
+
+// Proxy endpoint for POST requests
 app.post('/proxy', async (req, res) => {
   try {
-    // **Removed staticPayload**
-    // Instead, retrieve the payload from the client's request body
     const clientPayload = req.body;
 
-    // Validate the received payload (optional but recommended)
     if (!clientPayload || typeof clientPayload !== 'object') {
       return res.status(400).json({ success: false, message: "Invalid payload provided." });
     }
 
-    // Define target webhook URL
-    const targetWebhookURL = 'https://flow.zoho.com/681603876/flow/webhook/incoming'; // Replace with your actual webhook URL
-
-    // Query parameters for the target webhook
+    const targetWebhookURL = 'https://flow.zoho.com/681603876/flow/webhook/incoming';
     const params = {
-      zapikey: process.env.ZAPIKEY || '1001.946854075052a0c11090978c62d7ac49.44750e9a2e205fca9fa9e9bcd2d2c742', // Replace with your actual zapikey or use environment variable
+      zapikey: process.env.ZAPIKEY || 'default-key',
       isdebug: false
     };
 
-    // Send POST request to target webhook with the client's payload
     const response = await axios.post(targetWebhookURL, clientPayload, {
       params: params,
       headers: {
@@ -69,19 +90,15 @@ app.post('/proxy', async (req, res) => {
       timeout: 30000 // 30 seconds timeout
     });
 
-    // Forward response from webhook to client
     res.status(response.status).json(response.data);
   } catch (error) {
     console.error("Proxy error:", error.message);
 
     if (error.response) {
-      // Forward the error response from the target webhook
       res.status(error.response.status).json(error.response.data);
     } else if (error.request) {
-      // No response received from target webhook
       res.status(500).json({ success: false, message: "No response received from target webhook." });
     } else {
-      // Other errors
       res.status(500).json({ success: false, message: error.message });
     }
   }
