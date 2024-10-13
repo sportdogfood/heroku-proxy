@@ -46,7 +46,7 @@ app.get('/proxy/customer', async (req, res) => {
 
   // Retrieve fx.customer token from client request headers
   const fxCustomerToken = req.headers['fx-customer'];
-
+  console.log("Received fx-customer token:", fxCustomerToken);
   if (!fxCustomerToken) {
     return res.status(400).json({ message: "fx.customer token is required" });
   }
