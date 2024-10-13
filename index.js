@@ -14,7 +14,7 @@ const allowedOrigins = [
   'https://sportdogfood.com',
   'http://www.sportdogfood.com',
   'http://sportdogfood.com',
-  'https://secure.sportdogfood.com'  // Added the secure subdomain
+  'https://secure.sportdogfood.com' // Added the secure subdomain
 ];
 
 const corsOptions = {
@@ -31,7 +31,7 @@ const corsOptions = {
     }
   },
   methods: ['POST', 'GET', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'fx-customer']  // Allow fx-customer in headers
+  allowedHeaders: ['Content-Type', 'Authorization', 'fx-customer'], // Allow fx-customer in headers
 };
 
 // Use the CORS middleware
@@ -52,18 +52,43 @@ app.get('/proxy/customer', async (req, res) => {
   }
 
   const headers = {
-    "fx.customer": fxCustomerToken,  // Use the token passed from the client
+    "fx.customer": fxCustomerToken, // Use the token passed from the client
     "Content-Type": "application/json",
     "Accept": "*/*",
     "Accept-Language": "en-US,en;q=0.9"
   };
 
   try {
+    // Fetching the customer data
     const response = await axios.get(apiUrl, { headers });
-    res.status(200).json(response.data);
+
+    // Processing the response data
+    const customerData = response.data;
+
+    // Filter active subscriptions only
+    if (customerData.subscriptions) {
+      customerData.subscriptions = customerData.subscriptions.filter(subscription => subscription.is_active);
+
+      // Limit transactions to the last 5 for each active subscription
+      customerData.subscriptions.forEach(subscription => {
+        if (subscription.transactions) {
+          subscription.transactions = subscription.transactions.slice(-5);
+        }
+      });
+    }
+
+    // Send the processed data back to the client
+    res.status(200).json(customerData);
   } catch (error) {
     console.error("Error fetching customer data:", error.message);
-    res.status(500).json({ message: "Error fetching customer data", error: error.message });
+
+    if (error.response) {
+      res.status(error.response.status).json({ message: error.response.data });
+    } else if (error.request) {
+      res.status(500).json({ message: "No response received from the Foxy.io API." });
+    } else {
+      res.status(500).json({ message: error.message });
+    }
   }
 });
 
@@ -95,9 +120,9 @@ app.post('/proxy', async (req, res) => {
     console.error("Proxy error:", error.message);
 
     if (error.response) {
-      res.status(error.response.status).json(error.response.data);
+      res.status(error.response.status).json({ message: error.response.data });
     } else if (error.request) {
-      res.status(500).json({ success: false, message: "No response received from target webhook." });
+      res.status(500).json({ success: false, message: "No response received from the target webhook." });
     } else {
       res.status(500).json({ success: false, message: error.message });
     }
