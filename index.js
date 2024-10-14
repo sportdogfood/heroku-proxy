@@ -42,7 +42,7 @@ app.options('*', cors(corsOptions));
 
 // Route to fetch customer data using fx.customer token from headers
 app.get('/proxy/customer', async (req, res) => {
-  const apiUrl = "https://secure.sportdogfood.com/s/customer?sso=true&zoom=default_billing_address,default_shipping_address,default_payment_method,subscriptions,subscriptions:transactions,transactions,transactions:items";
+  const apiUrl = "https://secure.sportdogfood.com/s/customer?sso=true&zoom=default_billing_address,default_shipping_address,default_payment_method,subscriptions,transactions,transactions:items";
 
   // Retrieve fx.customer token from client request headers
   const fxCustomerToken = req.headers['fx-customer'];
@@ -68,13 +68,11 @@ app.get('/proxy/customer', async (req, res) => {
     // Filter active subscriptions only
     if (customerData.subscriptions) {
       customerData.subscriptions = customerData.subscriptions.filter(subscription => subscription.is_active);
+    }
 
-      // Limit transactions to the last 5 for each active subscription
-      customerData.subscriptions.forEach(subscription => {
-        if (subscription.transactions) {
-          subscription.transactions = subscription.transactions.slice(-5);
-        }
-      });
+    // Limit transactions to the last 5
+    if (customerData.transactions) {
+      customerData.transactions = customerData.transactions.slice(-5);
     }
 
     // Send the processed data back to the client
