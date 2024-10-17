@@ -113,8 +113,45 @@ app.post('/proxy', async (req, res) => {
       timeout: 30000 // 30 seconds timeout
     });
 
-    res.status(response.status).json(response.data);
-  } catch (error) {
+    res.status(resonse.status).json(response.data);
+  } catch (error) {p
+    console.error("Proxy error:", error.message);
+
+    if (error.response) {
+      res.status(error.response.status).json({ message: error.response.data });
+    } else if (error.request) {
+      res.status(500).json({ success: false, message: "No response received from the target webhook." });
+    } else {
+      res.status(500).json({ success: false, message: error.message });
+    }
+  }
+});
+
+// Proxy endpoint for POST requests
+app.post('/proxy/recover', async (req, res) => {
+  try {
+    const clientPayload = req.body;
+
+    if (!clientPayload || typeof clientPayload !== 'object') {
+      return res.status(400).json({ success: false, message: "Invalid payload provided." });
+    }
+
+    const targetWebhookURL = 'https://flow.zoho.com/681603876/flow/webhook/incoming';
+    const params = {
+      zapikey: process.env.ZAPIKEY || 'zapikey=1001.e48ac834463666ce61b714c906934d9e.70001f597361bdb34f7ce91b3cc6bb1a&isdebug=false',
+      isdebug: false
+    };
+
+    const response = await axios.post(targetWebhookURL, clientPayload, {
+      params: params,
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      timeout: 30000 // 30 seconds timeout
+    });
+
+    res.status(resonse.status).json(response.data);
+  } catch (error) {p
     console.error("Proxy error:", error.message);
 
     if (error.response) {
