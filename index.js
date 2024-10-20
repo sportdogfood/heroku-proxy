@@ -90,18 +90,52 @@ app.post('/proxy/recover', (req, res) => {
   handleProxyRequest(req, res, targetWebhookURL, apiKey);
 });
 
-// Bypass CORS route
+// NEW PROXY ROUTE (this is the one you just added for dynamic URL forwarding)
 app.post('/proxy/bypass', (req, res) => {
-  const targetWebhookURL = 'https://flow.zoho.com/681603876/flow/webhook/incoming';
-  const apiKey = process.env.ZAPIKEY_bypass; // Use the bypass key
+  // Get the targetURL and clientKey from the request body
+  const targetURL = req.body.targetURL;
+  const clientKey = req.body.clientKey || '';  // Treat as empty if not provided
 
-  // Manually set headers to allow any origin (bypass CORS)
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'POST, GET, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, fx-customer');
+  // Ensure targetURL is provided
+  if (!targetURL) {
+    return res.status(400).json({ success: false, message: "targetURL is required" });
+  }
 
-  handleProxyRequest(req, res, targetWebhookURL, apiKey);
+  // Forward the request to the targetURL along with the clientKey
+  forwardRequestToTarget(req, res, targetURL, clientKey);
 });
+
+// Function to forward the request to the target URL
+const forwardRequestToTarget = async (req, res, targetURL, clientKey) => {
+  try {
+    const clientPayload = req.body;
+
+    // Forward the request to the targetURL using axios
+    const response = await axios.post(targetURL, {
+      ...clientPayload, // Include the original payload
+      clientKey: clientKey || undefined,  // Add clientKey to the payload, treat as undefined if empty
+    }, {
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      timeout: 30000 // 30 seconds timeout
+    });
+
+    // Send back the response received from the targetURL
+    res.status(response.status).json(response.data);
+  } catch (error) {
+    console.error("Error forwarding request:", error.message, error.response ? error.response.data : '');
+
+    // Handle error based on axios response
+    if (error.response) {
+      res.status(error.response.status).json({ message: error.response.data });
+    } else if (error.request) {
+      res.status(500).json({ success: false, message: "No response received from the target URL." });
+    } else {
+      res.status(500).json({ success: false, message: error.message });
+    }
+  }
+};
 
 // Proxy endpoint that responds immediately to the webhook
 app.post('/proxy/async', (req, res) => {
