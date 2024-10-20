@@ -103,6 +103,18 @@ app.post('/proxy/bypass', (req, res) => {
   handleProxyRequest(req, res, targetWebhookURL, apiKey);
 });
 
+// Proxy endpoint that responds immediately to the webhook
+app.post('/proxy/async', (req, res) => {
+  const targetWebhookURL = 'https://flow.zoho.com/681603876/flow/webhook/incoming';
+  const apiKey = process.env.ZAPIKEY_async; // Use the async key
+
+  // Respond immediately to acknowledge the webhook
+  res.status(200).json({ success: true, message: 'Webhook received and is being processed.' });
+
+  // Process the webhook data asynchronously
+  handleProxyRequest(req, res, targetWebhookURL, apiKey);
+});
+
 // Handle favicon.ico requests to prevent unnecessary logs
 app.get('/favicon.ico', (req, res) => res.sendStatus(204));
 
