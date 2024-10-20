@@ -8,20 +8,19 @@ const app = express();
 // Middleware to parse JSON bodies
 app.use(express.json());
 
-// CORS configuration
+// CORS configuration (as previously defined)
 const allowedOrigins = [
   'https://www.sportdogfood.com',
   'https://sportdogfood.com',
   'http://www.sportdogfood.com',
   'http://sportdogfood.com',
-  'https://secure.sportdogfood.com' // Added the secure subdomain
+  'https://secure.sportdogfood.com'
 ];
 
 const corsOptions = {
   origin: function (origin, callback) {
     if (!origin) {
-      // Allow non-browser requests like curl or Postman
-      return callback(null, true);
+      return callback(null, true); // Allow non-browser requests like curl or Postman
     }
     if (allowedOrigins.includes(origin)) {
       callback(null, true);
@@ -31,17 +30,17 @@ const corsOptions = {
     }
   },
   methods: ['POST', 'GET', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'fx-customer'], // Allow fx-customer in headers
+  allowedHeaders: ['Content-Type', 'Authorization', 'fx-customer'],
+  credentials: true,
 };
 
-// Use the CORS middleware
 app.use(cors(corsOptions));
 
 // Handle preflight OPTIONS request
 app.options('*', cors(corsOptions));
 
-// Helper function for proxy requests
-const handleProxyRequest = async (req, res, targetWebhookURL) => {
+// Helper function for proxy requests with different API keys
+const handleProxyRequest = async (req, res, targetWebhookURL, apiKey) => {
   try {
     const clientPayload = req.body;
 
@@ -50,14 +49,15 @@ const handleProxyRequest = async (req, res, targetWebhookURL) => {
     }
 
     const params = {
-      zapikey: process.env.ZAPIKEY || 'default-key',
+      zapikey: apiKey, // Use the provided API key
       isdebug: false
     };
 
     const response = await axios.post(targetWebhookURL, clientPayload, {
       params: params,
       headers: {
-        'Content-Type': 'application/json'
+        'Content-Type': 'application/json',
+        'fx-customer': req.headers['fx-customer'] || '', // Forward fx-customer header if available
       },
       timeout: 30000 // 30 seconds timeout
     });
@@ -76,16 +76,31 @@ const handleProxyRequest = async (req, res, targetWebhookURL) => {
   }
 };
 
-// Proxy endpoint for POST requests
-app.post('/proxy', (req, res) => {
+// Proxy endpoint using ZAPIKEY_session
+app.post('/proxy/session', (req, res) => {
   const targetWebhookURL = 'https://flow.zoho.com/681603876/flow/webhook/incoming';
-  handleProxyRequest(req, res, targetWebhookURL);
+  const apiKey = process.env.ZAPIKEY_session; // Use the session key
+  handleProxyRequest(req, res, targetWebhookURL, apiKey);
 });
 
-// Proxy endpoint for POST requests with different params
+// Proxy endpoint using ZAPIKEY_recover
 app.post('/proxy/recover', (req, res) => {
   const targetWebhookURL = 'https://flow.zoho.com/681603876/flow/webhook/incoming';
-  handleProxyRequest(req, res, targetWebhookURL);
+  const apiKey = process.env.ZAPIKEY_recover; // Use the recover key
+  handleProxyRequest(req, res, targetWebhookURL, apiKey);
+});
+
+// Bypass CORS route
+app.post('/proxy/bypass', (req, res) => {
+  const targetWebhookURL = 'https://flow.zoho.com/681603876/flow/webhook/incoming';
+  const apiKey = process.env.ZAPIKEY_bypass; // Use the bypass key
+
+  // Manually set headers to allow any origin (bypass CORS)
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'POST, GET, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, fx-customer');
+
+  handleProxyRequest(req, res, targetWebhookURL, apiKey);
 });
 
 // Handle favicon.ico requests to prevent unnecessary logs
