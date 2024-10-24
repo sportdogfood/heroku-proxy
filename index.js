@@ -137,6 +137,58 @@ const forwardRequestToTarget = async (req, res, targetURL, clientKey) => {
   }
 };
 
+// Add this route to forward requests to '/zoho-api/*' to 'https://desk.zoho.com/api/*'
+app.all('/zoho-api/*', async (req, res) => {
+  const path = req.params[0]; // Extract the path after '/zoho-api/'
+  const targetURL = `https://desk.zoho.com/api/${path}`;
+
+  try {
+    // Clone headers and exclude unnecessary ones
+    const headers = { ...req.headers };
+    delete headers['host'];
+    delete headers['origin'];
+    delete headers['referer'];
+    delete headers['accept-encoding']; // Optional
+
+    // Ensure the 'Host' header is set correctly
+    headers['Host'] = 'desk.zoho.com';
+
+    const response = await axios({
+      method: req.method,
+      url: targetURL,
+      data: req.body,
+      headers: headers,
+      params: req.query, // Forward query parameters
+      timeout: 30000, // 30 seconds timeout
+    });
+
+    // Send back the response received from the target URL
+    res.status(response.status).send(response.data);
+  } catch (error) {
+    console.error(
+      'Error forwarding request:',
+      error.message,
+      error.response ? error.response.data : ''
+    );
+
+    // Handle errors based on axios response
+    if (error.response) {
+      res
+        .status(error.response.status)
+        .json({ message: error.response.data || error.response.statusText });
+    } else if (error.request) {
+      res
+        .status(500)
+        .json({ success: false, message: 'No response received from the target URL.' });
+    } else {
+      res.status(500).json({ success: false, message: error.message });
+    }
+  }
+});
+
+// Handle favicon.ico requests to prevent unnecessary logs
+app.get('/favicon.ico', (req, res) => res.sendStatus(204));
+
 // Proxy endpoint that responds immediately to the webhook
 app.post('/proxy/async', (req, res) => {
   const targetWebhookURL = 'https://flow.zoho.com/681603876/flow/webhook/incoming';
