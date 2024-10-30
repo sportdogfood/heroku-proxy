@@ -252,158 +252,21 @@ app.all('/zoho-api/*', async (req, res) => {
   }
 });
 
-// ... (existing code above)
+// Route to handle enriched data posted from Zoho Flow
+app.post('/proxy/enriched-data', (req, res) => {
+  // Extract the enriched data from the request body
+  const enrichedData = req.body;
 
-// Add this route to search contacts in Zoho Desk
-app.get('/search-contact', async (req, res) => {
-  // Extract parameters from the query string
-  const {
-    fx_customerId,
-    deskId,
-    crmId,
-    fx_customerEmail,
-    ticketId,
-    threadId,
-    last_name,
-    subject_contains,
-    lastname_contains,
-  } = req.query;
-
-  // Ensure fx_customerId and at least one other identifier is provided
-  if (!fx_customerId) {
-    return res.status(400).json({
-      success: false,
-      message: 'fx_customerId is required.',
-    });
+  // Validate the enriched data
+  if (!enrichedData || typeof enrichedData !== 'object') {
+    return res.status(400).json({ success: false, message: 'Invalid enriched data provided.' });
   }
 
-  if (
-    !deskId &&
-    !crmId &&
-    !fx_customerEmail &&
-    !ticketId &&
-    !threadId &&
-    !last_name &&
-    !subject_contains &&
-    !lastname_contains
-  ) {
-    return res.status(400).json({
-      success: false,
-      message:
-        'At least one identifier (deskId, crmId, fx_customerEmail, ticketId, threadId, last_name, subject_contains, lastname_contains) is required.',
-    });
-  }
+  // Process the enriched data - For example, you could store it in a database or log it for analysis
+  console.log('Enriched Data Received:', enrichedData);
 
-  // Function to make the API request
-  const makeApiRequest = async () => {
-    const headers = {
-      'Content-Type': 'application/json',
-      'Authorization': `Zoho-oauthtoken ${accessToken}`,
-    };
-
-    // Include orgId header if required
-    if (process.env.DESK_ORG_ID) {
-      headers['orgId'] = process.env.DESK_ORG_ID;
-    }
-
-    // Build search criteria
-    let searchCriteria = '';
-
-    if (deskId) {
-      searchCriteria += `(id:equals:${deskId})`;
-    }
-
-    if (crmId) {
-      if (searchCriteria) searchCriteria += 'or';
-      searchCriteria += `(crmContactId:equals:${crmId})`;
-    }
-
-    if (fx_customerEmail) {
-      if (searchCriteria) searchCriteria += 'or';
-      searchCriteria += `(email:equals:'${fx_customerEmail}')`;
-    }
-
-    if (last_name) {
-      if (searchCriteria) searchCriteria += 'or';
-      searchCriteria += `(lastName:equals:'${last_name}')`;
-    }
-
-    if (lastname_contains) {
-      if (searchCriteria) searchCriteria += 'or';
-      searchCriteria += `(lastName:contains:'${lastname_contains}')`;
-    }
-
-    if (subject_contains) {
-      if (searchCriteria) searchCriteria += 'or';
-      searchCriteria += `(subject:contains:'${subject_contains}')`;
-    }
-
-    // Encode the search criteria
-    const encodedCriteria = encodeURIComponent(searchCriteria);
-
-    // Zoho Desk API endpoint for searching contacts
-    const targetURL = `https://desk.zoho.com/api/v1/contacts/search?searchStr=${encodedCriteria}`;
-
-    return await axios({
-      method: 'GET',
-      url: targetURL,
-      headers: headers,
-      timeout: 30000, // 30 seconds timeout
-    });
-  };
-
-  try {
-    let response = await makeApiRequest();
-    // Send back the response received from the target URL
-    res.status(response.status).json(response.data);
-  } catch (error) {
-    if (error.response && error.response.status === 401) {
-      // Access token expired; refresh it and retry
-      console.log('Access token expired, refreshing token...');
-      const refreshResult = await refreshAccessToken();
-
-      if (refreshResult.success) {
-        try {
-          // Retry the API request with the new access token
-          response = await makeApiRequest();
-          res.status(response.status).json(response.data);
-        } catch (retryError) {
-          console.error('Error after token refresh:', retryError.response ? retryError.response.data : retryError.message);
-          res.status(retryError.response ? retryError.response.status : 500).json({
-            success: false,
-            message: retryError.response ? retryError.response.data : retryError.message,
-          });
-        }
-      } else {
-        res.status(500).json({
-          success: false,
-          message: 'Failed to refresh access token.',
-          error: refreshResult.error,
-        });
-      }
-    } else {
-      console.error('Error forwarding request:', error.response ? error.response.data : error.message);
-      res.status(error.response ? error.response.status : 500).json({
-        success: false,
-        message: error.response ? error.response.data : error.message,
-      });
-    }
-  }
-});
-
-// ... (existing code below)
-
-
-// Proxy endpoint that responds immediately to the webhook
-app.post('/proxy/async', (req, res) => {
-  const targetWebhookURL = 'https://flow.zoho.com/681603876/flow/webhook/incoming';
-  const apiKey = process.env.ZAPIKEY_async; // Use the async key
-
-  // Respond immediately to acknowledge the webhook
-  res.status(200).json({ success: true, message: 'Webhook received and is being processed.' });
-
-  // Process the webhook data asynchronously
-  handleProxyRequest(req, res, targetWebhookURL, apiKey);
+  // Respond back with a success message
+  res.status(200).json({ success: true, message: 'Enriched data received successfully.' });
 });
 
 // Handle favicon.ico requests to prevent unnecessary logs
