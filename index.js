@@ -132,6 +132,13 @@ app.post('/proxy/recover', (req, res) => {
   handleProxyRequest(req, res, targetWebhookURL, apiKey);
 });
 
+// Proxy endpoint using ZAPIKEY_recover
+app.post('/proxy/logout', (req, res) => {
+  const targetWebhookURL = 'https://flow.zoho.com/681603876/flow/webhook/incoming';
+  const apiKey = process.env.ZAPIKEY_logout; // Use the recover key
+  handleProxyRequest(req, res, targetWebhookURL, apiKey);
+});
+
 // NEW PROXY ROUTE (dynamic URL forwarding)
 app.post('/proxy/bypass', (req, res) => {
   // Get the targetURL and clientKey from the request body
