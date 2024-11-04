@@ -175,11 +175,43 @@ app.post('/proxy/recover', (req, res) => {
   handleProxyRequest(req, res, targetWebhookURL, apiKey);
 });
 
-app.post('/proxy/logout', (req, res) => {
-  const targetWebhookURL = 'https://flow.zoho.com/681603876/flow/webhook/incoming';
-  const apiKey = process.env.ZAPIKEY_logout;
-  handleProxyRequest(req, res, targetWebhookURL, apiKey);
+app.post('/proxy/session', async (req, res) => {
+  const targetWebhookURL = 'https://flow.zoho.com/681603876/flow/webhook/incoming?zapikey=1001.946854075052a0c11090978c62d7ac49.44750e9a2e205fca9fa9e9bcd2d2c742&isdebug=false';
+  
+  try {
+      const clientPayload = req.body;
+
+      // Validate the payload
+      if (!clientPayload || typeof clientPayload !== 'object') {
+          return res.status(400).json({ success: false, message: 'Invalid payload provided.' });
+      }
+
+      // Send the payload to the Zoho Flow webhook, including the zapikey in the query parameters
+      const response = await axios.post(targetWebhookURL, clientPayload, {
+          headers: {
+              'Content-Type': 'application/json', // Specify content type
+          },
+          timeout: 30000, // Set timeout to 30 seconds
+      });
+
+      // Respond back to the original request with the Zoho Flow response
+      res.status(response.status).json(response.data);
+  } catch (error) {
+      console.error('Error forwarding request to Zoho Flow webhook:', error.message, error.response ? error.response.data : '');
+
+      if (error.response) {
+          res.status(error.response.status).json({ message: error.response.data });
+      } else if (error.request) {
+          res.status(500).json({
+              success: false,
+              message: 'No response received from the Zoho Flow webhook.',
+          });
+      } else {
+          res.status(500).json({ success: false, message: error.message });
+      }
+  }
 });
+
 
 // New proxy route (dynamic URL forwarding)
 app.post('/proxy/bypass', (req, res) => {
