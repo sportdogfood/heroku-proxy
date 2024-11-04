@@ -29,46 +29,19 @@ const io = new Server(server, {
 app.use(express.json());
 
 // CORS configuration for Express
-const corsOptions = {
-  origin: function (origin, callback) {
-    if (!origin) {
-      return callback(null, true); // Allow non-browser requests
-    }
-    if ([
-      'https://www.sportdogfood.com',
-      'https://sportdogfood.com',
-      'http://www.sportdogfood.com',
-      'http://sportdogfood.com',
-      'https://secure.sportdogfood.com',
-      'https://sport-dog-food.webflow.io',
-      'https://hooks.webflow.com',
-      'https://webflow.com',
-    ].includes(origin)) {
-      callback(null, true);
-    } else {
-      console.log(`Disallowed origin: ${origin}`);
-      callback(new Error('CORS policy: This origin is not allowed.'));
-    }
-  },
-  methods: ['POST', 'GET', 'OPTIONS', 'PUT', 'DELETE'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'fx-customer'],
-  credentials: true,
-};
-
-app.use(cors(corsOptions));
+app.use(cors());
 
 // Handle preflight OPTIONS request
-app.options('*', cors(corsOptions));
+app.options('*', cors());
 
 // WebSocket connection handling
 io.on('connection', (socket) => {
   console.log('A user connected:', socket.id);
 
-  // Listen for messages from clients
-  socket.on('message', (msg) => {
-    console.log('Message from client:', msg);
-    // Echo the message back to the client
-    socket.emit('message', `Server: ${msg}`);
+  // Listen for a user to join their specific room
+  socket.on('joinRoom', (userID) => {
+    socket.join(userID); // Join the room associated with the user's ID
+    console.log(`User ${socket.id} joined room: ${userID}`);
   });
 
   // Handle disconnection
@@ -124,13 +97,14 @@ app.post('/enrichment-complete', (req, res) => {
   const enrichedData = req.body; // Capture the enriched data sent by Zoho Flow
   console.log('Enriched data received:', enrichedData); // Log the enriched data
 
-  // Emit the enriched data to all connected WebSocket clients
-  io.emit('enriched-data-ready', enrichedData);
+  const userID = enrichedData.userID; // Assuming userID is included in the enriched data
+
+  // Emit the enriched data to the specific room associated with the userID
+  io.to(userID).emit('enriched-data-ready', enrichedData); // Emit to the user's room
 
   // Acknowledge receipt of the enriched data
   res.status(200).send('Enrichment complete'); // Respond back to Zoho Flow
 });
-
 
 app.post('/proxy/recover', (req, res) => {
   const targetWebhookURL = 'https://flow.zoho.com/681603876/flow/webhook/incoming?zapikey=1001.946854075052a0c11090978c62d7ac49.44750e9a2e205fca9fa9e9bcd2d2c742&isdebug=false';
@@ -140,41 +114,40 @@ app.post('/proxy/recover', (req, res) => {
 
 app.post('/proxy/session', async (req, res) => {
   const targetWebhookURL = 'https://flow.zoho.com/681603876/flow/webhook/incoming?zapikey=1001.946854075052a0c11090978c62d7ac49.44750e9a2e205fca9fa9e9bcd2d2c742&isdebug=false';
-  
+
   try {
-      const clientPayload = req.body;
+    const clientPayload = req.body;
 
-      // Validate the payload
-      if (!clientPayload || typeof clientPayload !== 'object') {
-          return res.status(400).json({ success: false, message: 'Invalid payload provided.' });
-      }
+    // Validate the payload
+    if (!clientPayload || typeof clientPayload !== 'object') {
+      return res.status(400).json({ success: false, message: 'Invalid payload provided.' });
+    }
 
-      // Send the payload to the Zoho Flow webhook, including the zapikey in the query parameters
-      const response = await axios.post(targetWebhookURL, clientPayload, {
-          headers: {
-              'Content-Type': 'application/json', // Specify content type
-          },
-          timeout: 30000, // Set timeout to 30 seconds
-      });
+    // Send the payload to the Zoho Flow webhook, including the zapikey in the query parameters
+    const response = await axios.post(targetWebhookURL, clientPayload, {
+      headers: {
+        'Content-Type': 'application/json', // Specify content type
+      },
+      timeout: 30000, // Set timeout to 30 seconds
+    });
 
-      // Respond back to the original request with the Zoho Flow response
-      res.status(response.status).json(response.data);
+    // Respond back to the original request with the Zoho Flow response
+    res.status(response.status).json(response.data);
   } catch (error) {
-      console.error('Error forwarding request to Zoho Flow webhook:', error.message, error.response ? error.response.data : '');
+    console.error('Error forwarding request to Zoho Flow webhook:', error.message, error.response ? error.response.data : '');
 
-      if (error.response) {
-          res.status(error.response.status).json({ message: error.response.data });
-      } else if (error.request) {
-          res.status(500).json({
-              success: false,
-              message: 'No response received from the Zoho Flow webhook.',
-          });
-      } else {
-          res.status(500).json({ success: false, message: error.message });
-      }
+    if (error.response) {
+      res.status(error.response.status).json({ message: error.response.data });
+    } else if (error.request) {
+      res.status(500).json({
+        success: false,
+        message: 'No response received from the Zoho Flow webhook.',
+      });
+    } else {
+      res.status(500).json({ success: false, message: error.message });
+    }
   }
 });
-
 
 // New proxy route (dynamic URL forwarding)
 app.post('/proxy/bypass', (req, res) => {
