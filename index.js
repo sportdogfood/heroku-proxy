@@ -7,29 +7,43 @@ require('dotenv').config();
 
 const app = express();
 const server = http.createServer(app); // Create server
-const io = new Server(server); // Initialize Socket.IO
+const io = new Server(server, {
+  cors: {
+    origin: [
+      'https://www.sportdogfood.com',
+      'https://sportdogfood.com',
+      'http://www.sportdogfood.com',
+      'http://sportdogfood.com',
+      'https://secure.sportdogfood.com',
+      'https://sport-dog-food.webflow.io',
+      'https://hooks.webflow.com',
+      'https://webflow.com',
+    ],
+    methods: ['GET', 'POST'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'fx-customer'],
+    credentials: true,
+  },
+}); // Initialize Socket.IO with CORS configuration
 
 // Middleware to parse JSON bodies
 app.use(express.json());
 
-// CORS configuration
-const allowedOrigins = [
-  'https://www.sportdogfood.com',
-  'https://sportdogfood.com',
-  'http://www.sportdogfood.com',
-  'http://sportdogfood.com',
-  'https://secure.sportdogfood.com',
-  'https://sport-dog-food.webflow.io',
-  'https://hooks.webflow.com',
-  'https://webflow.com',
-];
-
+// CORS configuration for Express
 const corsOptions = {
   origin: function (origin, callback) {
     if (!origin) {
       return callback(null, true); // Allow non-browser requests
     }
-    if (allowedOrigins.includes(origin)) {
+    if ([
+      'https://www.sportdogfood.com',
+      'https://sportdogfood.com',
+      'http://www.sportdogfood.com',
+      'http://sportdogfood.com',
+      'https://secure.sportdogfood.com',
+      'https://sport-dog-food.webflow.io',
+      'https://hooks.webflow.com',
+      'https://webflow.com',
+    ].includes(origin)) {
       callback(null, true);
     } else {
       console.log(`Disallowed origin: ${origin}`);
@@ -139,39 +153,45 @@ const forwardRequestToTarget = async (req, res, targetURL, clientKey) => {
   try {
     const clientPayload = req.body;
 
+    // Create a new payload object based on the incoming request body
     const payload = {
       ...clientPayload,
     };
 
+    // If clientKey is provided, add it to the payload
     if (clientKey) {
       payload.clientKey = clientKey;
     }
 
+    // Forward the request to the target URL
     const response = await axios.post(targetURL, payload, {
       headers: {
         'Content-Type': 'application/json',
       },
-      timeout: 30000,
+      timeout: 30000, // Set timeout to 30 seconds
     });
 
+    // Send back the response received from the target URL
     res.status(response.status).json(response.data);
   } catch (error) {
     console.error('Error forwarding request:', error.message, error.response ? error.response.data : '');
 
+    // Handle errors based on the type of Axios error
     if (error.response) {
+      // The request was made and the server responded with a status code
       res.status(error.response.status).json({ message: error.response.data });
     } else if (error.request) {
+      // The request was made but no response was received
       res.status(500).json({
         success: false,
         message: 'No response received from the target URL.',
       });
     } else {
+      // Something happened in setting up the request that triggered an Error
       res.status(500).json({ success: false, message: error.message });
     }
   }
 };
-
-
 
 // Add a new route for forwarding requests to the Webflow webhook
 app.post('/proxy/webflow', async (req, res) => {
