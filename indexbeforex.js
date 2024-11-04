@@ -171,7 +171,64 @@ const forwardRequestToTarget = async (req, res, targetURL, clientKey) => {
   }
 };
 
+// Add this route to forward requests to '/zoho-api/*' to 'https://desk.zoho.com/api/*'
+app.all('/zoho-api/*', async (req, res) => {
+  const path = req.params[0]; // Extract the path after '/zoho-api/'
+  const targetURL = `https://desk.zoho.com/api/${path}`;
 
+  const makeApiRequest = async () => {
+    const headers = { ...req.headers };
+    delete headers['host'];
+    delete headers['origin'];
+    delete headers['referer'];
+    delete headers['accept-encoding'];
+
+    headers['Host'] = 'desk.zoho.com';
+    headers['Authorization'] = `Zoho-oauthtoken ${accessToken}`;
+
+    if (process.env.DESK_ORG_ID) {
+      headers['orgId'] = process.env.DESK_ORG_ID;
+    }
+
+    return await axios({
+      method: req.method,
+      url: targetURL,
+      data: req.body,
+      headers: headers,
+      params: req.query,
+      timeout: 30000,
+    });
+  };
+
+  try {
+    let response = await makeApiRequest();
+    res.status(response.status).send(response.data);
+  } catch (error) {
+    if (error.response && error.response.status === 401) {
+      console.log('Access token expired, refreshing token...');
+      const refreshResult = await refreshAccessToken();
+
+      if (refreshResult.success) {
+        try {
+          response = await makeApiRequest();
+          res.status(response.status).send(response.data);
+        } catch (retryError) {
+          console.error('Error after token refresh:', retryError.response ? retryError.response.data : retryError.message);
+          res.status(retryError.response ? retryError.response.status : 500).send(retryError.response ? retryError.response.data : retryError.message);
+        }
+      } else {
+        res.status(500).json({
+          success: false,
+          message: 'Failed to refresh access token.',
+          error: refreshResult.error,
+        });
+      }
+    } else {
+      console.error('Error forwarding request:', error.response ? error.response.data : error.message);
+      res.status(error.response ? error.response.status : 500).send(error.response ? error.response.data : error.message);
+    }
+  }
+});
 
 // Add a new route for forwarding requests to the Webflow webhook
 app.post('/proxy/webflow', async (req, res) => {
