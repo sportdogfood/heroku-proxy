@@ -14,7 +14,10 @@ const allowedOrigins = [
   'https://sportdogfood.com',
   'http://www.sportdogfood.com',
   'http://sportdogfood.com',
-  'https://secure.sportdogfood.com',
+  'https://secure.sportdogfood.com',      // Secure main domain
+  'https://sport-dog-food.webflow.io',    // Webflow staging domain
+  'https://hooks.webflow.com',            // Specific Webflow hook URL
+  'https://webflow.com'                   // Webflow main site
 ];
 
 const corsOptions = {
@@ -38,45 +41,6 @@ app.use(cors(corsOptions));
 
 // Handle preflight OPTIONS request
 app.options('*', cors(corsOptions));
-
-// Store tokens in memory or retrieve from environment variables
-let accessToken = process.env.DESK_ACCESS_TOKEN || '';
-let refreshToken = process.env.DESK_REFRESH_TOKEN;
-
-// Function to refresh the access token
-async function refreshAccessToken() {
-  const clientId = process.env.DESK_CLIENT_ID;
-  const clientSecret = process.env.DESK_CLIENT_SECRET;
-  const refreshUrl = 'https://accounts.zoho.com/oauth/v2/token';
-
-  const params = new URLSearchParams();
-  params.append('refresh_token', refreshToken);
-  params.append('client_id', clientId);
-  params.append('client_secret', clientSecret);
-  params.append('grant_type', 'refresh_token');
-
-  try {
-    const response = await axios.post(refreshUrl, params);
-    const data = response.data;
-
-    // Update the access token
-    accessToken = data.access_token;
-
-    // Update the refresh token if provided
-    if (data.refresh_token) {
-      refreshToken = data.refresh_token;
-    }
-
-    console.log('Access token refreshed successfully.');
-    return { success: true };
-  } catch (error) {
-    console.error('Error refreshing access token:', error.response ? error.response.data : error.message);
-    return {
-      success: false,
-      error: error.response ? error.response.data : error.message,
-    };
-  }
-}
 
 // Helper function for proxy requests with different API keys
 const handleProxyRequest = async (req, res, targetWebhookURL, apiKey) => {
@@ -255,6 +219,46 @@ app.all('/zoho-api/*', async (req, res) => {
     } else {
       console.error('Error forwarding request:', error.response ? error.response.data : error.message);
       res.status(error.response ? error.response.status : 500).send(error.response ? error.response.data : error.message);
+    }
+  }
+});
+
+// Add a new route for forwarding requests to the Webflow webhook
+app.post('/proxy/webflow', async (req, res) => {
+  const webhookUrl = 'https://hooks.webflow.com/logic/5c919f089b1194a099fe6c41/w_qApc_TrDQ';
+
+  try {
+    // Retrieve payload from the client request
+    const clientPayload = req.body;
+
+    // Ensure the payload is valid
+    if (!clientPayload || typeof clientPayload !== 'object') {
+      return res.status(400).json({ success: false, message: 'Invalid payload provided.' });
+    }
+
+    // Send the payload to the Webflow webhook
+    const response = await axios.post(webhookUrl, clientPayload, {
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      timeout: 30000, // 30 seconds timeout
+    });
+
+    // Respond with the Webflow webhook's response
+    res.status(response.status).json(response.data);
+  } catch (error) {
+    console.error('Error forwarding request to Webflow webhook:', error.message, error.response ? error.response.data : '');
+
+    // Handle error response
+    if (error.response) {
+      res.status(error.response.status).json({ message: error.response.data });
+    } else if (error.request) {
+      res.status(500).json({
+        success: false,
+        message: 'No response received from the Webflow webhook.',
+      });
+    } else {
+      res.status(500).json({ success: false, message: error.message });
     }
   }
 });
