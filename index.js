@@ -170,7 +170,7 @@ app.post('/enrichment-complete', (req, res) => {
 
 
 app.post('/proxy/recover', (req, res) => {
-  const targetWebhookURL = 'https://flow.zoho.com/681603876/flow/webhook/incoming';
+  const targetWebhookURL = 'https://flow.zoho.com/681603876/flow/webhook/incoming?zapikey=1001.946854075052a0c11090978c62d7ac49.44750e9a2e205fca9fa9e9bcd2d2c742&isdebug=false';
   const apiKey = process.env.ZAPIKEY_recover;
   handleProxyRequest(req, res, targetWebhookURL, apiKey);
 });
