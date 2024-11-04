@@ -1,5 +1,5 @@
 {
-  "name": "zoho-analytics-proxy",
+  "name": "heroku-proxy",
   "version": "1.0.0",
   "description": "A proxy server for fetching data from Zoho Analytics reports",
   "main": "index.js",
@@ -25,7 +25,8 @@
     "axios": "^1.7.7",
     "cors": "^2.8.5",
     "dotenv": "^16.4.5",
-    "express": "^4.21.1"
+    "express": "^4.21.1",
+    "socket.io": "^4.8.1"
   },
   "devDependencies": {
     "nodemon": "^2.0.22"
