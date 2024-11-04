@@ -94,16 +94,20 @@ const handleProxyRequest = async (req, res, targetWebhookURL, apiKey) => {
 
 // New Endpoint for Enriched Data
 app.post('/enrichment-complete', (req, res) => {
-  const enrichedData = req.body; // Capture the enriched data sent by Zoho Flow
+  console.log('Incoming request body:', req.body); // Log the complete request body
+  console.log('Raw request body:', req.body); // Log the complete request body
+   
+  const enrichedData = req.body; // Capture the enriched data
   console.log('Enriched data received:', enrichedData); // Log the enriched data
 
-  const userID = enrichedData.userID; // Assuming userID is included in the enriched data
+  const userID = enrichedData.userID; 
+    if (userID) {
+        io.to(userID).emit('enriched-data-ready', enrichedData); // Emit to the user's room
+    } else {
+        console.error('User ID not found in the enriched data.');
+    }
 
-  // Emit the enriched data to the specific room associated with the userID
-  io.to(userID).emit('enriched-data-ready', enrichedData); // Emit to the user's room
-
-  // Acknowledge receipt of the enriched data
-  res.status(200).send('Enrichment complete'); // Respond back to Zoho Flow
+    res.status(200).send('Enrichment complete'); // Respond back to Zoho Flow
 });
 
 app.post('/proxy/recover', (req, res) => {
