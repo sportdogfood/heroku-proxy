@@ -92,13 +92,9 @@ const handleProxyRequest = async (req, res, targetWebhookURL, apiKey) => {
 };
 
 // Proxy endpoints
-
 app.post('/proxy/session', (req, res) => {
-  // Use the provided webhook URL without adding 'isdebug' again
-  const targetWebhookURL = 'https://flow.zoho.com/681603876/flow/webhook/incoming?zapikey=1001.946854075052a0c11090978c62d7ac49.44750e9a2e205fca9fa9e9bcd2d2c742&isdebug=false';
-
-  // Call the helper function, but remove 'isdebug' from the params
-  handleProxyRequest(req, res, targetWebhookURL, null); // Pass null for apiKey if it's not needed
+  const targetWebhookURL = 'https://flow.zoho.com/681603876/flow/webhook/incoming?zapikey=1001.946854075052a0c11090978c62d7ac49.44750e9a2e205fca9fa9e9bcd2d2c742';
+  handleProxyRequest(req, res, targetWebhookURL, null); // Pass null if no additional API key is needed
 });
 
 // New Endpoint for Enriched Data
