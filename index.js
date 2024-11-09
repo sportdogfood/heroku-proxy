@@ -110,6 +110,11 @@ app.post('/enrichment-complete', (req, res) => {
     res.status(200).send('Enrichment complete'); // Respond back to Zoho Flow
 });
 
+app.post('/proxy/session', (req, res) => {
+  const targetWebhookURL = 'https://flow.zoho.com/681603876/flow/webhook/incoming?zapikey=1001.946854075052a0c11090978c62d7ac49.44750e9a2e205fca9fa9e9bcd2d2c742&isdebug=false';
+  handleProxyRequest(req, res, targetWebhookURL);
+});
+
 app.post('/proxy/recover', (req, res) => {
   const targetWebhookURL = 'https://flow.zoho.com/681603876/flow/webhook/incoming?zapikey=1001.e48ac834463666ce61b714c906934d9e.70001f597361bdb34f7ce91b3cc6bb1a&isdebug=false';
   handleProxyRequest(req, res, targetWebhookURL);
