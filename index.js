@@ -51,14 +51,6 @@ io.on('connection', (socket) => {
 });
 
 
-app.post('/proxy/session', (req, res) => {
-  // Use the provided webhook URL without adding 'isdebug' again
-  const targetWebhookURL = 'https://flow.zoho.com/681603876/flow/webhook/incoming?zapikey=1001.946854075052a0c11090978c62d7ac49.44750e9a2e205fca9fa9e9bcd2d2c742&isdebug=false';
-
-  // Call the helper function, but remove 'isdebug' from the params
-  handleProxyRequest(req, res, targetWebhookURL, null); // Pass null for apiKey if it's not needed
-});
-
 // Helper function for proxy requests with different API keys
 const handleProxyRequest = async (req, res, targetWebhookURL, apiKey) => {
   try {
@@ -101,6 +93,14 @@ const handleProxyRequest = async (req, res, targetWebhookURL, apiKey) => {
 
 // Proxy endpoints
 
+app.post('/proxy/session', (req, res) => {
+  // Use the provided webhook URL without adding 'isdebug' again
+  const targetWebhookURL = 'https://flow.zoho.com/681603876/flow/webhook/incoming?zapikey=1001.946854075052a0c11090978c62d7ac49.44750e9a2e205fca9fa9e9bcd2d2c742&isdebug=false';
+
+  // Call the helper function, but remove 'isdebug' from the params
+  handleProxyRequest(req, res, targetWebhookURL, null); // Pass null for apiKey if it's not needed
+});
+
 // New Endpoint for Enriched Data
 app.post('/enrichment-complete', (req, res) => {
   console.log('Incoming request body:', req.body); // Log the complete request body
@@ -118,8 +118,6 @@ app.post('/enrichment-complete', (req, res) => {
 
     res.status(200).send('Enrichment complete'); // Respond back to Zoho Flow
 });
-
-
 
 app.post('/proxy/recover', (req, res) => {
   const targetWebhookURL = 'https://flow.zoho.com/681603876/flow/webhook/incoming?zapikey=1001.e48ac834463666ce61b714c906934d9e.70001f597361bdb34f7ce91b3cc6bb1a&isdebug=false';
