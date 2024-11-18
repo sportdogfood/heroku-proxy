@@ -131,6 +131,12 @@ app.post('/proxy/auth', (req, res) => {
   handleProxyRequest(req, res, targetWebhookURL);
 });
 
+app.post('/proxy/start', (req, res) => {
+  const targetWebhookURL = 'https://flow.zoho.com/681603876/flow/webhook/incoming?zapikey=1001.8b174169355355f1746f8619a4adf8f9.22e42bb52899117a0c22e28743a8b7a7&isdebug=false';
+  handleProxyRequest(req, res, targetWebhookURL);
+});
+
+
 // New proxy route (dynamic URL forwarding)
 app.post('/proxy/bypass', (req, res) => {
   const targetURL = req.body.targetURL;
