@@ -121,18 +121,36 @@ app.post('/proxy/recover', (req, res) => {
   handleProxyRequest(req, res, targetWebhookURL);
 });
 
-app.post('/proxy/logout', (req, res) => {
-  const targetWebhookURL = 'https://flow.zoho.com/681603876/flow/webhook/incoming?zapikey=1001.82c68c4f4a0530a2060d237546ef9a5c.5256a1838c7b6d570c630ef200dee71d&isdebug=false';
-  handleProxyRequest(req, res, targetWebhookURL);
-});
 
 app.post('/proxy/end', (req, res) => {
-  const targetWebhookURL = 'https://flow.zoho.com/681603876/flow/webhook/incoming?zapikey=1001.82c68c4f4a0530a2060d237546ef9a5c.5256a1838c7b6d570c630ef200dee71d&isdebug=false';
+  const targetWebhookURL = 'https://flow.zoho.com/681603876/flow/webhook/incoming?zapikey=1001.82c68c4f4a0530a2060d237546ef9a5c.5256a1838c7b6d570c630ef200dee71d';
+  
+  const clientPayload = req.body;
+
+  // Validate payload
+  if (!clientPayload.sessionId || !clientPayload.timestamp) {
+    return res.status(400).json({
+      success: false,
+      message: 'Missing required fields in payload: sessionId, timestamp.',
+    });
+  }
+  
   handleProxyRequest(req, res, targetWebhookURL);
 });
 
 app.post('/proxy/auth', (req, res) => {
-  const targetWebhookURL = 'https://flow.zoho.com/681603876/flow/webhook/incoming?zapikey=1001.8cc8785c2793dabb1fdb06f731bb493e.fda6cdb7ec5bcdf70b76b68d5307a6c4&isdebug=false';
+  const targetWebhookURL = 'https://flow.zoho.com/681603876/flow/webhook/incoming?zapikey=1001.8cc8785c2793dabb1fdb06f731bb493e.fda6cdb7ec5bcdf70b76b68d5307a6c4';
+  
+  const clientPayload = req.body;
+
+  // Validate payload
+  if (!clientPayload.sessionId || !clientPayload.timestamp) {
+    return res.status(400).json({
+      success: false,
+      message: 'Missing required fields in payload: sessionId, timestamp.',
+    });
+  }
+  
   handleProxyRequest(req, res, targetWebhookURL);
 });
 
