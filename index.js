@@ -145,8 +145,8 @@ app.post('/proxy/start', (req, res) => {
   if (
     !clientPayload.sessionId ||
     !clientPayload.timestamp ||
-    !clientPayload.customerEmail ||
-    !clientPayload.customerId
+   
+  
   ) {
     return res.status(400).json({
       success: false,
