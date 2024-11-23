@@ -137,7 +137,7 @@ app.post('/proxy/auth', (req, res) => {
 });
 
 app.post('/proxy/start', (req, res) => {
-  const targetWebhookURL = 'https://flow.zoho.com/681603876/flow/webhook/incoming?zapikey=1001.8b174169355355f1746f8619a4adf8f9.22e42bb52899117a0c22e28743a8b7a7&isdebug=false';
+  const targetWebhookURL = 'https://flow.zoho.com/681603876/flow/webhook/incoming?zapikey=1001.8b174169355355f1746f8619a4adf8f9.22e42bb52899117a0c22e28743a8b7a7';
 
   const clientPayload = req.body;
 
@@ -145,20 +145,11 @@ app.post('/proxy/start', (req, res) => {
   if (!clientPayload.sessionId || !clientPayload.timestamp) {
     return res.status(400).json({
       success: false,
-      message: 'Missing required fields in payload: sessionId or timestamp.',
+      message: 'Missing required fields in payload: sessionId, timestamp.',
     });
   }
 
-  // Optional fields for customerEmail and customerId
-  if (!clientPayload.customerEmail) {
-    console.warn('[proxy/start] Missing optional field: customerEmail.');
-  }
-
-  if (!clientPayload.customerId) {
-    console.warn('[proxy/start] Missing optional field: customerId.');
-  }
-
-  handleProxyRequest(req, res, targetWebhookURL);
+  handleProxyRequest(req, res, targetWebhookURL, null); // Pass null since no additional parameter is needed
 });
 
 
