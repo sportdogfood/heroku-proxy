@@ -142,20 +142,25 @@ app.post('/proxy/start', (req, res) => {
   const clientPayload = req.body;
 
   // Validate payload
-  if (
-    !clientPayload.sessionId ||
-    !clientPayload.timestamp ||
-   
-  
-  ) {
+  if (!clientPayload.sessionId || !clientPayload.timestamp) {
     return res.status(400).json({
       success: false,
-      message: 'Missing required fields in payload: sessionId, timestamp, customerEmail, or customerId.',
+      message: 'Missing required fields in payload: sessionId or timestamp.',
     });
+  }
+
+  // Optional fields for customerEmail and customerId
+  if (!clientPayload.customerEmail) {
+    console.warn('[proxy/start] Missing optional field: customerEmail.');
+  }
+
+  if (!clientPayload.customerId) {
+    console.warn('[proxy/start] Missing optional field: customerId.');
   }
 
   handleProxyRequest(req, res, targetWebhookURL);
 });
+
 
 
 
