@@ -18,6 +18,7 @@ const io = new Server(server, {
       'https://sport-dog-food.webflow.io',
       'https://hooks.webflow.com',
       'https://webflow.com',
+      'https://sportdogfood.github.io',
     ],
     methods: ['GET', 'POST'],
     allowedHeaders: ['Content-Type', 'Authorization', 'fx-customer'],
