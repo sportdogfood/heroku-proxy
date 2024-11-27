@@ -9,7 +9,7 @@ code=CTQHavTs
 # Define variables for client details and API endpoint
 $client_id = "qnt8hNhXDKD8rC2TV5KOEfYBDyomOL3DZo9KyBRWh1XOqV7I"
 $client_secret = "dZgVccT0eFd3weqoMDGBUqGKFB4pAjBUeteB0kHxnh4CCztt7mQrtdaRI96adVOG"
-$auth_code = "CTQHavTs" # Replace with your actual authorization code
+$auth_code = "V7e5GkUG" # Replace with your actual authorization code
 $redirect_uri = "https://www.sportdogfood.com/tracking"
 $api_endpoint = "https://wwwcie.ups.com/security/v1/oauth/token"
 

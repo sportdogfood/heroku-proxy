@@ -228,7 +228,6 @@ app.post('/proxy/ups/refresh', async (req, res) => {
   }
 });
 
-
 // UPS Tracking Route
 app.get('/proxy/ups/track/:inquiryNumber', async (req, res) => {
   const { inquiryNumber } = req.params;
@@ -237,7 +236,7 @@ app.get('/proxy/ups/track/:inquiryNumber', async (req, res) => {
   // Function to get a fresh access token (server-side handling)
   const fetchAccessToken = async () => {
     const upsTokenURL = 'https://wwwcie.ups.com/security/v1/oauth/token';
-  
+
     try {
       const response = await axios.post(
         upsTokenURL,
@@ -255,23 +254,22 @@ app.get('/proxy/ups/track/:inquiryNumber', async (req, res) => {
           timeout: 30000,
         }
       );
-  
+
       console.log('Access token successfully refreshed:', response.data.access_token);
       return response.data.access_token;
     } catch (error) {
       console.error('Error refreshing UPS access token:', error.message);
-  
+
       // Log detailed error response if available
       if (error.response) {
         console.error('Response data:', error.response.data);
         console.error('Response status:', error.response.status);
         console.error('Response headers:', error.response.headers);
       }
-  
+
       throw new Error('Unable to refresh access token');
     }
   };
-  
 
   try {
     // Check for access token in headers or dynamically fetch one
@@ -303,6 +301,49 @@ app.get('/proxy/ups/track/:inquiryNumber', async (req, res) => {
   }
 });
 
+// UPS Test Authentication Route
+app.get('/proxy/ups/test-auth', async (req, res) => {
+  const upsTestURL = 'https://wwwcie.ups.com/api/track/v1/details/test';
+  const accessToken = req.headers['authorization']?.replace('Bearer ', '');
+
+  if (!accessToken) {
+    return res.status(401).json({
+      success: false,
+      message: 'Missing Authorization header with access token.',
+    });
+  }
+
+  try {
+    const response = await axios.get(upsTestURL, {
+      headers: {
+        'Authorization': `Bearer ${accessToken}`,
+        'transId': 'auth-test',
+        'transactionSrc': 'proxy',
+      },
+      timeout: 30000,
+    });
+
+    res.status(200).json({
+      success: true,
+      message: 'Access token is valid.',
+      data: response.data,
+    });
+  } catch (error) {
+    console.error('Error testing UPS authentication:', error.message);
+    if (error.response) {
+      res.status(error.response.status).json({
+        success: false,
+        message: 'Access token is invalid or expired.',
+        error: error.response.data,
+      });
+    } else {
+      res.status(500).json({
+        success: false,
+        message: error.message,
+      });
+    }
+  }
+});
 
 
 // New proxy route (dynamic URL forwarding)
