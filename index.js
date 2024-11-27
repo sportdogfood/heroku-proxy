@@ -175,10 +175,13 @@ app.post('/proxy/start', (req, res) => {
 // UPS Refresh Token Route
 app.post('/proxy/ups/refresh', async (req, res) => {
   const upsTokenURL = 'https://wwwcie.ups.com/security/v1/oauth/token';
-  const refresh_token = req.body.refresh_token || process.env.UPS_REFRESH_TOKEN;
+  const refreshToken = req.body.refresh_token || process.env.UPS_REFRESH_TOKEN;
 
-  if (!refresh_token) {
-    return res.status(400).json({ success: false, message: 'Missing refresh_token in request body or environment.' });
+  if (!refreshToken) {
+    return res.status(400).json({
+      success: false,
+      message: 'Missing refresh_token in request body or environment.',
+    });
   }
 
   try {
@@ -186,7 +189,7 @@ app.post('/proxy/ups/refresh', async (req, res) => {
       upsTokenURL,
       new URLSearchParams({
         grant_type: 'refresh_token',
-        refresh_token: refresh_token,
+        refresh_token: refreshToken,
       }),
       {
         headers: {
@@ -195,37 +198,79 @@ app.post('/proxy/ups/refresh', async (req, res) => {
           ).toString('base64')}`,
           'Content-Type': 'application/x-www-form-urlencoded',
         },
-        timeout: 30000,
+        timeout: 30000, // Timeout set to 30 seconds
       }
     );
 
-    const accessToken = response.data.access_token;
+    // Extract required fields from response
+    const { access_token, expires_in } = response.data;
 
-    // Send the new access token in the response
-    res.status(200).json({ success: true, access_token: accessToken });
+    // Respond with success and token information
+    res.status(200).json({
+      success: true,
+      access_token,
+      expires_in, // Token expiry in seconds
+    });
   } catch (error) {
     console.error('Error refreshing UPS token:', error.message);
+
     if (error.response) {
-      res.status(error.response.status).json({ message: error.response.data });
+      res.status(error.response.status).json({
+        success: false,
+        message: error.response.data,
+      });
     } else {
-      res.status(500).json({ success: false, message: error.message });
+      res.status(500).json({
+        success: false,
+        message: error.message,
+      });
     }
   }
 });
+
 
 // UPS Tracking Route
 app.get('/proxy/ups/track/:inquiryNumber', async (req, res) => {
   const { inquiryNumber } = req.params;
   const upsTrackingURL = `https://wwwcie.ups.com/api/track/v1/details/${inquiryNumber}`;
 
-  // Check for access token in request headers
-  const accessToken = req.headers['authorization'] || req.query.access_token;
-
-  if (!accessToken) {
-    return res.status(401).json({ success: false, message: 'Missing Authorization header with access token.' });
-  }
+  // Function to get a fresh access token (server-side handling)
+  const fetchAccessToken = async () => {
+    const upsTokenURL = 'https://wwwcie.ups.com/security/v1/oauth/token';
+    try {
+      const response = await axios.post(
+        upsTokenURL,
+        new URLSearchParams({
+          grant_type: 'refresh_token',
+          refresh_token: process.env.UPS_REFRESH_TOKEN, // Ensure this is set in your environment variables
+        }),
+        {
+          headers: {
+            'Authorization': `Basic ${Buffer.from(
+              `${process.env.UPS_CLIENT_ID}:${process.env.UPS_CLIENT_SECRET}`
+            ).toString('base64')}`,
+            'Content-Type': 'application/x-www-form-urlencoded',
+          },
+          timeout: 30000,
+        }
+      );
+      return response.data.access_token;
+    } catch (error) {
+      console.error('Error refreshing UPS access token:', error.message);
+      throw new Error('Unable to refresh access token');
+    }
+  };
 
   try {
+    // Check for access token in headers or dynamically fetch one
+    let accessToken = req.headers['authorization']?.replace('Bearer ', '');
+
+    if (!accessToken) {
+      console.log('Access token not provided, fetching a new one...');
+      accessToken = await fetchAccessToken();
+    }
+
+    // Make the tracking API request with the valid access token
     const response = await axios.get(upsTrackingURL, {
       headers: {
         'Authorization': `Bearer ${accessToken}`,
