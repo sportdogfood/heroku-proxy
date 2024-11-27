@@ -80,3 +80,78 @@ client_secret = "dZgVccT0eFd3weqoMDGBUqGKFB4pAjBUeteB0kHxnh4CCztt7mQrtdaRI96adVO
 auth_code = "CTQHavTs" # Replace with your actual authorization code
 redirect_uri = "https://www.sportdogfood.com/tracking"
 refresh_token = "ZFUAp4PbCwglm5fYiMGtO0P7zVZbRuQG"
+
+curl -X POST https://wwwcie.ups.com/security/v1/oauth/token \
+-H "Authorization: Basic <base64_encoded_client_id_and_secret>" \
+-H "Content-Type: application/x-www-form-urlencoded" \
+--data-urlencode "grant_type=refresh_token" \
+--data-urlencode "refresh_token=your_refresh_token"
+
+
+
+# Define variables for client details and API endpoint
+$client_id = "qnt8hNhXDKD8rC2TV5KOEfYBDyomOL3DZo9KyBRWh1XOqV7I"
+$client_secret = "dZgVccT0eFd3weqoMDGBUqGKFB4pAjBUeteB0kHxnh4CCztt7mQrtdaRI96adVOG"
+$auth_code = "CTQHavTs" # Replace with your actual authorization code
+$redirect_uri = "https://www.sportdogfood.com/tracking"
+$api_endpoint = "https://wwwcie.ups.com/security/v1/oauth/token"
+
+# Fix: Use ${} to delimit variables for correct concatenation
+$authString = "${client_id}:${client_secret}"
+
+# Encode the client_id and client_secret as Base64
+$encodedAuth = [System.Convert]::ToBase64String([System.Text.Encoding]::UTF8.GetBytes($authString))
+
+# Debugging: Verify the encoded Authorization Header
+Write-Host "Encoded Authorization Header:" -ForegroundColor Cyan
+Write-Host "Basic $encodedAuth"
+
+# Set headers
+$headers = @{
+    "Authorization" = "Basic $encodedAuth"
+    "Content-Type" = "application/x-www-form-urlencoded"
+}
+
+# Set body parameters
+$body = @{
+    "grant_type" = "authorization_code"
+    "code" = $auth_code
+    "redirect_uri" = $redirect_uri
+}
+
+# Debugging: Log the headers and body
+Write-Host "Request Headers:" -ForegroundColor Cyan
+$headers | Format-Table -AutoSize
+
+Write-Host "Request Body:" -ForegroundColor Cyan
+$body | Format-Table -AutoSize
+
+# Invoke the REST API request and return the response
+try {
+    # Perform the API request
+    $response = Invoke-RestMethod -Uri $api_endpoint -Method Post -Headers $headers -Body $body
+
+    # Return the full response object
+    Write-Host "Access Token Response:" -ForegroundColor Green
+    $response | ConvertTo-Json -Depth 10 | Write-Output
+
+    # Return the response for use elsewhere in the script
+    return $response
+} catch {
+    Write-Host "Error occurred:" -ForegroundColor Red
+    $_.Exception.Message
+
+    # Handle and return detailed error response
+    if ($_.Exception.Response) {
+        $errorResponse = $_.Exception.Response.GetResponseStream()
+        $reader = New-Object System.IO.StreamReader($errorResponse)
+        $reader.BaseStream.Position = 0
+        $errorContent = $reader.ReadToEnd()
+
+        Write-Host "Error Details:" -ForegroundColor Yellow
+        $errorContent | ConvertFrom-Json | ConvertTo-Json -Depth 10 | Write-Output
+
+        # Return error content
+        return $errorContent | ConvertFrom-Json
+    }
+}

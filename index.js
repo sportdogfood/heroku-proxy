@@ -237,12 +237,13 @@ app.get('/proxy/ups/track/:inquiryNumber', async (req, res) => {
   // Function to get a fresh access token (server-side handling)
   const fetchAccessToken = async () => {
     const upsTokenURL = 'https://wwwcie.ups.com/security/v1/oauth/token';
+  
     try {
       const response = await axios.post(
         upsTokenURL,
         new URLSearchParams({
           grant_type: 'refresh_token',
-          refresh_token: process.env.UPS_REFRESH_TOKEN, // Ensure this is set in your environment variables
+          refresh_token: process.env.UPS_REFRESH_TOKEN,
         }),
         {
           headers: {
@@ -254,12 +255,23 @@ app.get('/proxy/ups/track/:inquiryNumber', async (req, res) => {
           timeout: 30000,
         }
       );
+  
+      console.log('Access token successfully refreshed:', response.data.access_token);
       return response.data.access_token;
     } catch (error) {
       console.error('Error refreshing UPS access token:', error.message);
+  
+      // Log detailed error response if available
+      if (error.response) {
+        console.error('Response data:', error.response.data);
+        console.error('Response status:', error.response.status);
+        console.error('Response headers:', error.response.headers);
+      }
+  
       throw new Error('Unable to refresh access token');
     }
   };
+  
 
   try {
     // Check for access token in headers or dynamically fetch one
