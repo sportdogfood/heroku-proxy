@@ -172,6 +172,80 @@ app.post('/proxy/start', (req, res) => {
 });
 
 
+// UPS Refresh Token Route
+app.post('/proxy/ups/refresh', async (req, res) => {
+  const upsTokenURL = 'https://wwwcie.ups.com/security/v1/oauth/token';
+  const refresh_token = req.body.refresh_token || process.env.UPS_REFRESH_TOKEN;
+
+  if (!refresh_token) {
+    return res.status(400).json({ success: false, message: 'Missing refresh_token in request body or environment.' });
+  }
+
+  try {
+    const response = await axios.post(
+      upsTokenURL,
+      new URLSearchParams({
+        grant_type: 'refresh_token',
+        refresh_token: refresh_token,
+      }),
+      {
+        headers: {
+          'Authorization': `Basic ${Buffer.from(
+            `${process.env.UPS_CLIENT_ID}:${process.env.UPS_CLIENT_SECRET}`
+          ).toString('base64')}`,
+          'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        timeout: 30000,
+      }
+    );
+
+    const accessToken = response.data.access_token;
+
+    // Send the new access token in the response
+    res.status(200).json({ success: true, access_token: accessToken });
+  } catch (error) {
+    console.error('Error refreshing UPS token:', error.message);
+    if (error.response) {
+      res.status(error.response.status).json({ message: error.response.data });
+    } else {
+      res.status(500).json({ success: false, message: error.message });
+    }
+  }
+});
+
+// UPS Tracking Route
+app.get('/proxy/ups/track/:inquiryNumber', async (req, res) => {
+  const { inquiryNumber } = req.params;
+  const upsTrackingURL = `https://wwwcie.ups.com/api/track/v1/details/${inquiryNumber}`;
+
+  // Check for access token in request headers
+  const accessToken = req.headers['authorization'] || req.query.access_token;
+
+  if (!accessToken) {
+    return res.status(401).json({ success: false, message: 'Missing Authorization header with access token.' });
+  }
+
+  try {
+    const response = await axios.get(upsTrackingURL, {
+      headers: {
+        'Authorization': `Bearer ${accessToken}`,
+        'transId': 'tracking-request',
+        'transactionSrc': 'proxy',
+      },
+      timeout: 30000,
+    });
+
+    res.status(200).json(response.data);
+  } catch (error) {
+    console.error('Error fetching UPS tracking:', error.message);
+    if (error.response) {
+      res.status(error.response.status).json({ message: error.response.data });
+    } else {
+      res.status(500).json({ success: false, message: error.message });
+    }
+  }
+});
+
 
 
 // New proxy route (dynamic URL forwarding)
