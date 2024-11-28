@@ -1,3 +1,301 @@
+https://www.ups.com/lasso/signin?client_id=qnt8hNhXDKD8rC2TV5KOEfYBDyomOL3DZo9KyBRWh1XOqV7I&redirect_uri=https://www.sportdogfood.com/tracking&response_type=code&scope=tracking&state=550e8400-e29b-41d4-a716-446655440000&type=ups_com_api
+
+requires signin
+user: philipposa
+password: r:esyq4]|I5{l8ZI03FD=/Z:iZ
+
+https://www.sportdogfood.com/tracking?code=DVW9sKoc&scope=tracking&state=550e8400-e29b-41d4-a716-446655440000
+
+code=DVW9sKoc
+
+
+"refresh_token_expires_in":  "5183999",
+"refresh_token_status":  "approved",
+"token_type":  "Bearer",
+"issued_at":  "1732761805790",
+"client_id":  "qnt8hNhXDKD8rC2TV5KOEfYBDyomOL3DZo9KyBRWh1XOqV7I",
+"access_token":  "eyJraWQiOiI2NGM0YjYyMC0yZmFhLTQzNTYtYjA0MS1mM2EwZjM2Y2MxZmEiLCJ0eXAiOiJKV1QiLCJhbGciOiJSUzM4NCJ9.eyJzdWIiOiJwaGlsaXBAc3BvcnRkb2dmb29kLmNvbSIsImNsaWVudGlkIjoicW50OGhOaFhES0Q4ckMyVFY1S09FZllCRHlvbU9MM0RabzlLeUJSV2gxWE9xVjdJIiwiaXNzIjoiaHR0cHM6Ly9hcGlzLnVwcy5jb20iLCJ1dWlkIjoiRTVDMUEwMTUtQzhBMC0xRURELThBREUtNDU0OUE0NEM4QTkzIiwic2lkIjoiNjRjNGI2MjAtMmZhYS00MzU2LWIwNDEtZjNhMGYzNmNjMWZhIiwiYXVkIjoiU3BvcnQiLCJhdCI6IndWWUtBS3Q1cEpmSGtkcDBvbGxQb0p5WlZRSHYiLCJuYmYiOjE3MzI3NjE4MDUsIkRpc3BsYXlOYW1lIjoiU3BvcnQiLCJleHAiOjE3MzI3NzYyMDUsImlhdCI6MTczMjc2MTgwNSwianRpIjoiMDI4NTI4ZmItOTQxOC00YjRmLWE5ZjAtNjZjZWIwMTRmYTUxIn0.JppdidvCuP5gVEFl2RYzTkfNZqhH_3dPutnzkeFjrV44SbGeuMMraHuqtheItI45DQ5r_MttaYbO7aIqDKLSXjT65rkHoTM6fMWYbhNpNCStvJSuYau_mtTVJrvPu8cEE0f0YVNvzoeaDnvGxRFvTqCFVN3KR8Ze9-DnrgcOHljemWAnGW8Hd4NvuTtr6c_VKstsD5ifPwkD-X5gpr3F6tLYePgDed85q0272uyJO7ZBAEvo27whB4CON6TqpVVQXQiPkxw69pOuJWnE6kAhupKzEAA2mDJbJ2SdAFYYPvdTbP2viipycjpbUVVLG6W5CFlK_HElMSLsC-jJT1Ip_sPIT-vfIzhMnBISBFsPDGDOgnIMQ-HcBM6MNZnBuiFyTBVHvXRdK48ue5pIJvzxta-DMBoBnYXZR-PpN_qFkz0UEpR_cgHrF-Mu7SPczbrwVn0o9BUwV_P4IvSMFspWAb0_6dOqnxt5gVfmTSawBBCS2euB7WNlMYnXtZ3KdoGh0EXVPaW8yxQDtgtA-9lkDpAXA-2OLlE85s0rBdV88tcecXp77B4kMesTM0m605S3OC_d10YiipWQkVQSs_GAlUaP7pscigJGUuYT0_lygigzZtb8fNY5kxSEj9uPg6Ib371vxClDMjzTuUHXk2bKyXFJYlkhE0UdQiTjWlEAUVw",
+"refresh_token":  "QidFgAUaiw1I74HeZGklImyDfeIfYXyo",
+"refresh_token_issued_at":  "1732761805790",
+"expires_in":  "14399",
+"status":  "approved"
+
+
+
+# Set your UPS API credentials
+$clientId = 'qnt8hNhXDKD8rC2TV5KOEfYBDyomOL3DZo9KyBRWh1XOqV7I'
+$clientSecret = 'dZgVccT0eFd3weqoMDGBUqGKFB4pAjBUeteB0kHxnh4CCztt7mQrtdaRI96adVOG'
+
+# Encode credentials in Base64
+$bytes = [System.Text.Encoding]::UTF8.GetBytes("$clientId`:$clientSecret")
+$encodedCredentials = [Convert]::ToBase64String($bytes)
+
+# Set the headers
+$headers = @{
+    'Content-Type'  = 'application/x-www-form-urlencoded'
+    'Authorization' = "Basic $encodedCredentials"
+}
+
+# Set the body
+$body = 'grant_type=client_credentials'
+
+# Make the POST request
+$response = Invoke-RestMethod -Method Post `
+                             -Uri 'https://wwwcie.ups.com/security/v1/oauth/token' `
+                             -Headers $headers `
+                             -Body $body
+
+# Output the response
+$response
+
+
+token_type   : Bearer
+issued_at    : 1732733606613
+client_id    : qnt8hNhXDKD8rC2TV5KOEfYBDyomOL3DZo9KyBRWh1XOqV7I
+access_token : eyJraWQiOiI2NGM0YjYyMC0yZmFhLTQzNTYtYjA0MS1mM2EwZjM2Y2MxZmEiLCJ0eXAiOiJKV1QiLCJhbGciOiJSUzM4NCJ9.eyJzdWI
+               iOiJwaGlsaXBAc3BvcnRkb2dmb29kLmNvbSIsImNsaWVudGlkIjoicW50OGhOaFhES0Q4ckMyVFY1S09FZllCRHlvbU9MM0RabzlLeUJ
+               SV2gxWE9xVjdJIiwiaXNzIjoiaHR0cHM6Ly9hcGlzLnVwcy5jb20iLCJ1dWlkIjoiRTVDMUEwMTUtQzhBMC0xRURELThBREUtNDU0OUE
+               0NEM4QTkzIiwic2lkIjoiNjRjNGI2MjAtMmZhYS00MzU2LWIwNDEtZjNhMGYzNmNjMWZhIiwiYXVkIjoiU3BvcnQiLCJhdCI6IjlNWVV
+               CbWF0c2pPaUlkSGtZeWNLN3FBMHlzRlQiLCJuYmYiOjE3MzI3MzM2MDYsIkRpc3BsYXlOYW1lIjoiU3BvcnQiLCJleHAiOjE3MzI3NDg
+               wMDYsImlhdCI6MTczMjczMzYwNiwianRpIjoiYTMxNmEyODYtOGU0NS00NDc5LWFmYmItNGFmMjIwM2MyOWU5In0.GSseaFJQbpLwSrF
+               14J1uaT39GpEh7tGPPVrJPkBuetR9YCdr3TCuJSmTMQUIhX_gin5JeRA8mUecH5Ob12N3ypROoWtZnLQhynW1cLRx5MXIoZeV3SmFGOG
+               _tXcTk33MW6yWltdZhscC4lBkt3IR-JrGzBjMTVp9LzM1cEi33HBgwoD1Xx2eJVYw0fYb-GFu5cS-ZhVOREs5n7oIshsPJef_eXrD7FF
+               hrDN0eNGcyHp-oY1_DYRwWFtZUvggqugT1LvrydDBMsYakFLItqLdPptLh1PN9gummkgZVUQ0aKNE9hTbRWR_7vGwZH7E_htH_1sLIBF
+               jdGvKc5FdYrXTKz3OmKEe_gEWd9GsZm-GKe6PtGgmNGTa0lS_rR2eyf5eKfDhQ8QsYv8kJmnsDLPMMiWFpVJPeAXV_ugXbG3EAkkuIvY
+               SIhAl6EeFn9dPgooslEtVyaBUmdXYSaNBaDpsKqTx28zrmJpgr8rWnJFUxfsMYZKRBsy0rUTeUQT2jN25Ar7YUgeJsU14akbmG7SrlZF
+               AVvMTR4YwSiD1RNLyiRkhmwqjb3fSNvxkChMqzP41TIbo8kMrHvVG2An5aMHq7eGAeZWMvfRPmTVZ21PkcG_99NS_7yzCTYLd4c1V6v_
+               m15NBbCoRkbBcEv71sDvLbtozFWskythm0sF8nhP0pQM
+expires_in   : 14399
+status       : approved
+
+
+
+analyze this workflow 
+
+https://www.ups.com/lasso/signin?client_id=qnt8hNhXDKD8rC2TV5KOEfYBDyomOL3DZo9KyBRWh1XOqV7I&redirect_uri=https://www.sportdogfood.com/tracking&response_type=code&scope=tracking&state=550e8400-e29b-41d4-a716-446655440000&type=ups_com_api
+
+requires signin
+user: philipposa
+password: r:esyq4]|I5{l8ZI03FD=/Z:iZ
+
+then redirects https://www.sportdogfood.com/tracking
+uri contains https://www.sportdogfood.com/tracking?code=FiPE4eA1&scope=read:org&state=550e8400-e29b-41d4-a716-446655440000
+
+https://www.sportdogfood.com/tracking?code=WYoK2uj4&scope=tracking&state=550e8400-e29b-41d4-a716-446655440000
+code=FiPE4eA1
+4dgNyQAK
+WYoK2uj4
+DVW9sKoc
+invoke
+
+# Define variables for client details and API endpoint
+$client_id = "qnt8hNhXDKD8rC2TV5KOEfYBDyomOL3DZo9KyBRWh1XOqV7I"
+$client_secret = "dZgVccT0eFd3weqoMDGBUqGKFB4pAjBUeteB0kHxnh4CCztt7mQrtdaRI96adVOG"
+$auth_code = "DVW9sKoc" # Replace with your actual authorization code
+$redirect_uri = "https://www.sportdogfood.com/tracking"
+$api_endpoint = "https://wwwcie.ups.com/security/v1/oauth/token"
+
+# Fix: Use ${} to delimit variables for correct concatenation
+$authString = "${client_id}:${client_secret}"
+
+# Encode the client_id and client_secret as Base64
+$encodedAuth = [System.Convert]::ToBase64String([System.Text.Encoding]::UTF8.GetBytes($authString))
+
+# Debugging: Verify the encoded Authorization Header
+Write-Host "Encoded Authorization Header:" -ForegroundColor Cyan
+Write-Host "Basic $encodedAuth"
+
+# Set headers
+$headers = @{
+    "Authorization" = "Basic $encodedAuth"
+    "Content-Type" = "application/x-www-form-urlencoded"
+}
+
+# Set body parameters
+$body = @{
+    "grant_type" = "authorization_code"
+    "code" = $auth_code
+    "redirect_uri" = $redirect_uri
+}
+
+# Debugging: Log the headers and body
+Write-Host "Request Headers:" -ForegroundColor Cyan
+$headers | Format-Table -AutoSize
+
+Write-Host "Request Body:" -ForegroundColor Cyan
+$body | Format-Table -AutoSize
+
+# Invoke the REST API request and return the response
+try {
+    # Perform the API request
+    $response = Invoke-RestMethod -Uri $api_endpoint -Method Post -Headers $headers -Body $body
+
+    # Return the full response object
+    Write-Host "Access Token Response:" -ForegroundColor Green
+    $response | ConvertTo-Json -Depth 10 | Write-Output
+
+    # Return the response for use elsewhere in the script
+    return $response
+} catch {
+    Write-Host "Error occurred:" -ForegroundColor Red
+    $_.Exception.Message
+
+    # Handle and return detailed error response
+    if ($_.Exception.Response) {
+        $errorResponse = $_.Exception.Response.GetResponseStream()
+        $reader = New-Object System.IO.StreamReader($errorResponse)
+        $reader.BaseStream.Position = 0
+        $errorContent = $reader.ReadToEnd()
+
+        Write-Host "Error Details:" -ForegroundColor Yellow
+        $errorContent | ConvertFrom-Json | ConvertTo-Json -Depth 10 | Write-Output
+
+        # Return error content
+        return $errorContent | ConvertFrom-Json
+    }
+}
+
+yield this response 
+Access Token Response:
+{
+    "refresh_token_expires_in":  "5183999",
+    "refresh_token_status":  "approved",
+    "token_type":  "Bearer",
+    "issued_at":  "1732760922718",
+    "client_id":  "qnt8hNhXDKD8rC2TV5KOEfYBDyomOL3DZo9KyBRWh1XOqV7I",
+    "access_token":  "eyJraWQiOiI2NGM0YjYyMC0yZmFhLTQzNTYtYjA0MS1mM2EwZjM2Y2MxZmEiLCJ0eXAiOiJKV1QiLCJhbGciOiJSUzM4NCJ9.eyJzdWIiOiJwaGlsaXBAc3BvcnRkb2dmb29kLmNvbSIsImNsaWVudGlkIjoicW50OGhOaFhES0Q4ckMyVFY1S09FZllCRHlvbU9MM0RabzlLeUJSV2gxWE9xVjdJIiwiaXNzIjoiaHR0cHM6Ly9hcGlzLnVwcy5jb20iLCJ1dWlkIjoiRTVDMUEwMTUtQzhBMC0xRURELThBREUtNDU0OUE0NEM4QTkzIiwic2lkIjoiNjRjNGI2MjAtMmZhYS00MzU2LWIwNDEtZjNhMGYzNmNjMWZhIiwiYXVkIjoiU3BvcnQiLCJhdCI6IlNEbUdCVzd0aUFUSE5jVExwU0tEdzZxR1JFSHUiLCJuYmYiOjE3MzI3NjA5MjIsIkRpc3BsYXlOYW1lIjoiU3BvcnQiLCJleHAiOjE3MzI3NzUzMjIsImlhdCI6MTczMjc2MDkyMiwianRpIjoiN2Q4OGY5NDItZmExYi00YThhLWE5OGEtMmQyNTRlNWM3ODc4In0.XsBXaH5R3FfQffciFLD3dKC2mH_4VdqAean55Flx2OZl0SKqOOgb-LG6LiWejUydTTcKLuCPqXe5ryqed0pEc-zyfEm_lT4hN5LDRaOHkElouA1Fm6SPDODchXrBzbulGkTORbsBzM_eBXSNkesMPMDc9MzNQyCSXTtzxwQ-OsAc0wuzMXpuNil9SgGvqEDZfK-1foatD3fbgy52ujMCTxywTpSwnKa_yc3cwODE6bfS_MR3-GnguETb2-4kCjoKAVNrb1Bm5q9l9iIgzYKXdyfhQp40ZS2d_ErLBpmtlIy-AZ3xgsG7AuQVpcfo9hdsqxtx6buSi7-KgyiuEoSwR6kz6xuaADW1qBu_PCAP_6lFwlN9_0Fjyw_Z4Gpah3nf65f9dLuYI698Tif3N0ojt8eL8QmvflVcy99_Er9uZENOZri3jX9xPlJ2Z4ugmhRKFFwLxAMshHRWesXF8DzRkJ7lafWBslSMzzfpg8YQCfSCdYJGT4uhH9qsyjkJD33JZDD-YozOsgtTia-Wckx0I-jeicikPuHLvFVXnm_Y_koCXNAKi41CRvxVbgVYMA7UxdV73IOXxs1PdroM-XjebIjPuHy5saMFuBIz6xcztM5lVUVZ-jCwIj8ApQHYZ8rGwXTNQPDQOgY2tKKl-dFFANekjJGga0CUquP41MuvNLo",
+    "refresh_token":  "t0LvfTnLwaUnO9z4rGQnyBB3tS4MKxzA",
+    "refresh_token_issued_at":  "1732760922718",
+    "expires_in":  "14399",
+    "status":  "approved"
+}
+
+
+refresh_token_expires_in : 5183999
+refresh_token_status     : approved
+token_type               : Bearer
+issued_at                : 1732760922718
+client_id                : qnt8hNhXDKD8rC2TV5KOEfYBDyomOL3DZo9KyBRWh1XOqV7I
+access_token             : eyJraWQiOiI2NGM0YjYyMC0yZmFhLTQzNTYtYjA0MS1mM2EwZjM2Y2MxZmEiLCJ0eXAiOiJKV1QiLCJhbGciOiJSUzM4
+                           NCJ9.eyJzdWIiOiJwaGlsaXBAc3BvcnRkb2dmb29kLmNvbSIsImNsaWVudGlkIjoicW50OGhOaFhES0Q4ckMyVFY1S09
+                           FZllCRHlvbU9MM0RabzlLeUJSV2gxWE9xVjdJIiwiaXNzIjoiaHR0cHM6Ly9hcGlzLnVwcy5jb20iLCJ1dWlkIjoiRTV
+                           DMUEwMTUtQzhBMC0xRURELThBREUtNDU0OUE0NEM4QTkzIiwic2lkIjoiNjRjNGI2MjAtMmZhYS00MzU2LWIwNDEtZjN
+                           hMGYzNmNjMWZhIiwiYXVkIjoiU3BvcnQiLCJhdCI6IlNEbUdCVzd0aUFUSE5jVExwU0tEdzZxR1JFSHUiLCJuYmYiOjE
+                           3MzI3NjA5MjIsIkRpc3BsYXlOYW1lIjoiU3BvcnQiLCJleHAiOjE3MzI3NzUzMjIsImlhdCI6MTczMjc2MDkyMiwianR
+                           pIjoiN2Q4OGY5NDItZmExYi00YThhLWE5OGEtMmQyNTRlNWM3ODc4In0.XsBXaH5R3FfQffciFLD3dKC2mH_4VdqAean
+                           55Flx2OZl0SKqOOgb-LG6LiWejUydTTcKLuCPqXe5ryqed0pEc-zyfEm_lT4hN5LDRaOHkElouA1Fm6SPDODchXrBzbu
+                           lGkTORbsBzM_eBXSNkesMPMDc9MzNQyCSXTtzxwQ-OsAc0wuzMXpuNil9SgGvqEDZfK-1foatD3fbgy52ujMCTxywTpS
+                           wnKa_yc3cwODE6bfS_MR3-GnguETb2-4kCjoKAVNrb1Bm5q9l9iIgzYKXdyfhQp40ZS2d_ErLBpmtlIy-AZ3xgsG7AuQ
+                           Vpcfo9hdsqxtx6buSi7-KgyiuEoSwR6kz6xuaADW1qBu_PCAP_6lFwlN9_0Fjyw_Z4Gpah3nf65f9dLuYI698Tif3N0o
+                           jt8eL8QmvflVcy99_Er9uZENOZri3jX9xPlJ2Z4ugmhRKFFwLxAMshHRWesXF8DzRkJ7lafWBslSMzzfpg8YQCfSCdYJ
+                           GT4uhH9qsyjkJD33JZDD-YozOsgtTia-Wckx0I-jeicikPuHLvFVXnm_Y_koCXNAKi41CRvxVbgVYMA7UxdV73IOXxs1
+                           PdroM-XjebIjPuHy5saMFuBIz6xcztM5lVUVZ-jCwIj8ApQHYZ8rGwXTNQPDQOgY2tKKl-dFFANekjJGga0CUquP41Mu
+                           vNLo
+refresh_token            : t0LvfTnLwaUnO9z4rGQnyBB3tS4MKxzA
+refresh_token_issued_at  : 1732760922718
+expires_in               : 14399
+status                   : approved
+
+
+PS C:\Users\gombc>
+PS C:\Users\gombc> # Invoke the REST API request and return the response
+PS C:\Users\gombc> try {
+>>     # Perform the API request
+>>     $response = Invoke-RestMethod -Uri $api_endpoint -Method Post -Headers $headers -Body $body
+>>
+>>     # Return the full response object
+>>     Write-Host "Access Token Response:" -ForegroundColor Green
+>>     $response | ConvertTo-Json -Depth 10 | Write-Output
+>>
+>>     # Return the response for use elsewhere in the script
+>>     return $response
+>> } catch {
+>>     Write-Host "Error occurred:" -ForegroundColor Red
+>>     $_.Exception.Message
+>>
+>>     # Handle and return detailed error response
+>>     if ($_.Exception.Response) {
+>>         $errorResponse = $_.Exception.Response.GetResponseStream()
+>>         $reader = New-Object System.IO.StreamReader($errorResponse)
+>>         $reader.BaseStream.Position = 0
+>>         $errorContent = $reader.ReadToEnd()
+>>
+>>         Write-Host "Error Details:" -ForegroundColor Yellow
+>>         $errorContent | ConvertFrom-Json | ConvertTo-Json -Depth 10 | Write-Output
+>>
+>>         # Return error content
+>>         return $errorContent | ConvertFrom-Json
+>>     }
+>> }
+Access Token Response:
+{
+    "refresh_token_expires_in":  "5183999",
+    "refresh_token_status":  "approved",
+    "token_type":  "Bearer",
+    "issued_at":  "1732719931136",
+    "client_id":  "qnt8hNhXDKD8rC2TV5KOEfYBDyomOL3DZo9KyBRWh1XOqV7I",
+    "access_token":  "eyJraWQiOiI2NGM0YjYyMC0yZmFhLTQzNTYtYjA0MS1mM2EwZjM2Y2MxZmEiLCJ0eXAiOiJKV1QiLCJhbGciOiJSUzM4NCJ9.eyJzdWIiOiJwaGlsaXBAc3BvcnRkb2dmb29kLmNvbSIsImNsaWVudGlkIjoicW50OGhOaFhES0Q4ckMyVFY1S09FZllCRHlvbU9MM0RabzlLeUJSV2gxWE9xVjdJIiwiaXNzIjoiaHR0cHM6Ly9hcGlzLnVwcy5jb20iLCJ1dWlkIjoiRTVDMUEwMTUtQzhBMC0xRURELThBREUtNDU0OUE0NEM4QTkzIiwic2lkIjoiNjRjNGI2MjAtMmZhYS00MzU2LWIwNDEtZjNhMGYzNmNjMWZhIiwiYXVkIjoiU3BvcnQiLCJhdCI6IlViQWNqbHY3Vm1lcmhTVjdFOWhzd3U1QkYyR3IiLCJuYmYiOjE3MzI3MTk5MzEsIkRpc3BsYXlOYW1lIjoiU3BvcnQiLCJleHAiOjE3MzI3MzQzMzEsImlhdCI6MTczMjcxOTkzMSwianRpIjoiMGI0NTIyMDktNTAwNC00YzU1LTk4NWQtZWEyYzIxM2I2ZDBjIn0.lZuutlnX_Fo14VSmNIOO8BK13QiEQnWZUyQVtv1P3A5TYrR6Oya9hS4Z3TNHc-j2WxugvlVxLOY4sXcvy-OiHREpnUmj5QLFSpgewwYcSQ1OnqbAAG1KNNYFX-C8AYp3xqfEQHHa_ucPYE8d8eneiJSqKurXYNoTtrw4n8AxQ-Q0PJqZwV4bIpTDS0hklf9aY9Fr-We0JhegPti9JP6WhWS5nQW6o_zHxU6C5fBCatDoUpOX4nV5fW3Fxl_PBLKs4IipiYBCnJjZsJjMXSXipkiqUK1thgVuHkR6esnVhshP8SOEi0l3HWOpe-HntRrLQDZBNLTl6HqZRVzNlcQ5Q9e2Yc-T5MAYFp8wP2iMe5gPMg2Irsbd8F9ByA0gS97wc0rYZv1kH1NTq3JFuBfXA5kADx-299RbAIbgnZj15PGbqdUUYyR1SfV_YYBRdaUgVFoGhQZnRtvGXllBfqOnFtwXFRPsXeys13hQvludMU4Np06wz6Q2XvdllPuEHNXBlY2ewfOOquGkGvcJCpq7lb67fJ_eIcE-80S0apER93Yq_ysnueUXmddlsK41PR2_nTTuCzoVaMINhR2Jrc4HqPtTzWVrY2ZtS8yxYVVoPoSxdn3Aq3GjoU-P8Cw5LDsPpZgJU5zqwRHLhndBIixYdqc10rTc9_XjwwWehjuXFRg",
+    "refresh_token":  "nW8GjI3iRSyAkYgRcPMRT09Aa9MAWWlO",
+    "refresh_token_issued_at":  "1732719931136",
+    "expires_in":  "14399",
+    "status":  "approved"
+}
+
+
+refresh_token_expires_in : 5183999
+refresh_token_status     : approved
+token_type               : Bearer
+issued_at                : 1732719931136
+client_id                : qnt8hNhXDKD8rC2TV5KOEfYBDyomOL3DZo9KyBRWh1XOqV7I
+access_token             : eyJraWQiOiI2NGM0YjYyMC0yZmFhLTQzNTYtYjA0MS1mM2EwZjM2Y2MxZmEiLCJ0eXAiOiJKV1QiLCJhbGciOiJSUzM4
+                           NCJ9.eyJzdWIiOiJwaGlsaXBAc3BvcnRkb2dmb29kLmNvbSIsImNsaWVudGlkIjoicW50OGhOaFhES0Q4ckMyVFY1S09
+                           FZllCRHlvbU9MM0RabzlLeUJSV2gxWE9xVjdJIiwiaXNzIjoiaHR0cHM6Ly9hcGlzLnVwcy5jb20iLCJ1dWlkIjoiRTV
+                           DMUEwMTUtQzhBMC0xRURELThBREUtNDU0OUE0NEM4QTkzIiwic2lkIjoiNjRjNGI2MjAtMmZhYS00MzU2LWIwNDEtZjN
+                           hMGYzNmNjMWZhIiwiYXVkIjoiU3BvcnQiLCJhdCI6IlViQWNqbHY3Vm1lcmhTVjdFOWhzd3U1QkYyR3IiLCJuYmYiOjE
+                           3MzI3MTk5MzEsIkRpc3BsYXlOYW1lIjoiU3BvcnQiLCJleHAiOjE3MzI3MzQzMzEsImlhdCI6MTczMjcxOTkzMSwianR
+                           pIjoiMGI0NTIyMDktNTAwNC00YzU1LTk4NWQtZWEyYzIxM2I2ZDBjIn0.lZuutlnX_Fo14VSmNIOO8BK13QiEQnWZUyQ
+                           Vtv1P3A5TYrR6Oya9hS4Z3TNHc-j2WxugvlVxLOY4sXcvy-OiHREpnUmj5QLFSpgewwYcSQ1OnqbAAG1KNNYFX-C8AYp
+                           3xqfEQHHa_ucPYE8d8eneiJSqKurXYNoTtrw4n8AxQ-Q0PJqZwV4bIpTDS0hklf9aY9Fr-We0JhegPti9JP6WhWS5nQW
+                           6o_zHxU6C5fBCatDoUpOX4nV5fW3Fxl_PBLKs4IipiYBCnJjZsJjMXSXipkiqUK1thgVuHkR6esnVhshP8SOEi0l3HWO
+                           pe-HntRrLQDZBNLTl6HqZRVzNlcQ5Q9e2Yc-T5MAYFp8wP2iMe5gPMg2Irsbd8F9ByA0gS97wc0rYZv1kH1NTq3JFuBf
+                           XA5kADx-299RbAIbgnZj15PGbqdUUYyR1SfV_YYBRdaUgVFoGhQZnRtvGXllBfqOnFtwXFRPsXeys13hQvludMU4Np06
+                           wz6Q2XvdllPuEHNXBlY2ewfOOquGkGvcJCpq7lb67fJ_eIcE-80S0apER93Yq_ysnueUXmddlsK41PR2_nTTuCzoVaMI
+                           NhR2Jrc4HqPtTzWVrY2ZtS8yxYVVoPoSxdn3Aq3GjoU-P8Cw5LDsPpZgJU5zqwRHLhndBIixYdqc10rTc9_XjwwWehju
+                           XFRg
+refresh_token            : nW8GjI3iRSyAkYgRcPMRT09Aa9MAWWlO
+refresh_token_issued_at  : 1732719931136
+expires_in               : 14399
+status                   : approved
+
+
+
+
+# Define variables
+$uri = "https://cat-heroku-proxy-51e72e8e9b26.herokuapp.com/proxy/ups/test-auth"
+$headers = @{
+    "Authorization" = "Bearer eyJraWQiOiI2NGM0YjYyMC0yZmFhLTQzNTYtYjA0MS1mM2EwZjM2Y2MxZmEiLCJ0eXAiOiJKV1QiLCJhbGciOiJSUzM4NCJ9.eyJzdWIiOiJwaGlsaXBAc3BvcnRkb2dmb29kLmNvbSIsImNsaWVudGlkIjoicW50OGhOaFhES0Q4ckMyVFY1S09FZllCRHlvbU9MM0RabzlLeUJSV2gxWE9xVjdJIiwiaXNzIjoiaHR0cHM6Ly9hcGlzLnVwcy5jb20iLCJ1dWlkIjoiRTVDMUEwMTUtQzhBMC0xRURELThBREUtNDU0OUE0NEM4QTkzIiwic2lkIjoiNjRjNGI2MjAtMmZhYS00MzU2LWIwNDEtZjNhMGYzNmNjMWZhIiwiYXVkIjoiU3BvcnQiLCJhdCI6IlViQWNqbHY3Vm1lcmhTVjdFOWhzd3U1QkYyR3IiLCJuYmYiOjE3MzI3MTk5MzEsIkRpc3BsYXlOYW1lIjoiU3BvcnQiLCJleHAiOjE3MzI3MzQzMzEsImlhdCI6MTczMjcxOTkzMSwianRpIjoiMGI0NTIyMDktNTAwNC00YzU1LTk4NWQtZWEyYzIxM2I2ZDBjIn0.lZuutlnX_Fo14VSmNIOO8BK13QiEQnWZUyQVtv1P3A5TYrR6Oya9hS4Z3TNHc-j2WxugvlVxLOY4sXcvy-OiHREpnUmj5QLFSpgewwYcSQ1OnqbAAG1KNNYFX-C8AYp3xqfEQHHa_ucPYE8d8eneiJSqKurXYNoTtrw4n8AxQ-Q0PJqZwV4bIpTDS0hklf9aY9Fr-We0JhegPti9JP6WhWS5nQW6o_zHxU6C5fBCatDoUpOX4nV5fW3Fxl_PBLKs4IipiYBCnJjZsJjMXSXipkiqUK1thgVuHkR6esnVhshP8SOEi0l3HWOpe-HntRrLQDZBNLTl6HqZRVzNlcQ5Q9e2Yc-T5MAYFp8wP2iMe5gPMg2Irsbd8F9ByA0gS97wc0rYZv1kH1NTq3JFuBfXA5kADx-299RbAIbgnZj15PGbqdUUYyR1SfV_YYBRdaUgVFoGhQZnRtvGXllBfqOnFtwXFRPsXeys13hQvludMU4Np06wz6Q2XvdllPuEHNXBlY2ewfOOquGkGvcJCpq7lb67fJ_eIcE-80S0apER93Yq_ysnueUXmddlsK41PR2_nTTuCzoVaMINhR2Jrc4HqPtTzWVrY2ZtS8yxYVVoPoSxdn3Aq3GjoU-P8Cw5LDsPpZgJU5zqwRHLhndBIixYdqc10rTc9_XjwwWehjuXFRg"
+}
+
+# Perform the GET request with verbose output
+try {
+    $response = Invoke-RestMethod -Uri $uri -Headers $headers -Method Get
+    Write-Host "Response:" -ForegroundColor Green
+    $response | ConvertTo-Json -Depth 10 | Write-Output
+} catch {
+    Write-Host "Error:" -ForegroundColor Red
+    $_.Exception.Message
+
+    if ($_.Exception.Response) {
+        $errorStream = $_.Exception.Response.GetResponseStream()
+        $reader = New-Object System.IO.StreamReader($errorStream)
+        $reader.BaseStream.Position = 0
+        $reader.ReadToEnd() | Write-Host
+    }
+}
+
+
+
+
 https://www.ups.com/lasso/signin?client_id=qnt8hNhXDKD8rC2TV5KOEfYBDyomOL3DZo9KyBRWh1XOqV7I
 &redirect_uri=https://www.sportdogfood.com/tracking&response_type=code&scope=read:org&state=550e8400-e29b-41d4-a716-446655440000&type=ups_com_api
 
@@ -9,7 +307,7 @@ code=CTQHavTs
 # Define variables for client details and API endpoint
 $client_id = "qnt8hNhXDKD8rC2TV5KOEfYBDyomOL3DZo9KyBRWh1XOqV7I"
 $client_secret = "dZgVccT0eFd3weqoMDGBUqGKFB4pAjBUeteB0kHxnh4CCztt7mQrtdaRI96adVOG"
-$auth_code = "V7e5GkUG" # Replace with your actual authorization code
+$auth_code = "FiPE4eA1" # Replace with your actual authorization code
 $redirect_uri = "https://www.sportdogfood.com/tracking"
 $api_endpoint = "https://wwwcie.ups.com/security/v1/oauth/token"
 
