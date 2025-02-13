@@ -14,8 +14,7 @@ const allowedOrigins = [
   'https://sportdogfood.com',
   'http://www.sportdogfood.com',
   'http://sportdogfood.com',
-  'https://wefu.webflow.io/',
-  'http://wefu.webflow.io/',
+
   'https://secure.sportdogfood.com' // Added the secure subdomain
 ];
 
@@ -118,26 +117,6 @@ app.post('/proxy/ups/token', async (req, res) => {
   }
 });
 
-
-app.get('/proxy/people/:personId', async (req, res) => {
-  const { personId } = req.params;
-  const { show_id, customer_id } = req.query;
-  const targetUrl = `https://sglapi.wellingtoninternational.com/people/${personId}?pid=${personId}&show_id=${show_id}&customer_id=${customer_id}`;
-  console.log('Proxying People request to:', targetUrl);
-  try {
-    const response = await axios.get(targetUrl, {
-      headers: { 'Accept': 'application/json' }
-    });
-    res.status(response.status).json(response.data);
-  } catch (error) {
-    console.error("Proxy error in /proxy/people/:personId:", error.message, error.response ? error.response.data : '');
-    if (error.response) {
-      res.status(error.response.status).json(error.response.data);
-    } else {
-      res.status(500).json({ message: error.message });
-    }
-  }
-});
 
 
 // Route to handle UPS tracking requests

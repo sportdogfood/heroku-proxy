@@ -7,6 +7,8 @@ const app = express();
 // 1. CORS Configuration
 const allowedOrigins = [
   'https://www.sportdogfood.com',
+  'https://wefu.webflow.io/',
+  'http://wefu.webflow.io/',
   'https://sportdogfood.com'
 ];
 
@@ -33,6 +35,26 @@ app.use(express.json());
 
 // 4. Handle Preflight OPTIONS Requests
 app.options('*', cors(corsOptions));
+app.get('/proxy/people/:personId', async (req, res) => {
+  const { personId } = req.params;
+  const { show_id, customer_id } = req.query;
+  const targetUrl = `https://sglapi.wellingtoninternational.com/people/${personId}?pid=${personId}&show_id=${show_id}&customer_id=${customer_id}`;
+  console.log('Proxying People request to:', targetUrl);
+  try {
+    const response = await axios.get(targetUrl, {
+      headers: { 'Accept': 'application/json' }
+    });
+    res.status(response.status).json(response.data);
+  } catch (error) {
+    console.error("Proxy error in /proxy/people/:personId:", error.message, error.response ? error.response.data : '');
+    if (error.response) {
+      res.status(error.response.status).json(error.response.data);
+    } else {
+      res.status(500).json({ message: error.message });
+    }
+  }
+});
+
 
 // 5. Proxy Endpoint
 app.post('/proxy', async (req, res) => {
