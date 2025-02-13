@@ -14,6 +14,8 @@ const allowedOrigins = [
   'https://sportdogfood.com',
   'http://www.sportdogfood.com',
   'http://sportdogfood.com',
+  'https://wefu.webflow.io/',
+  'http://wefu.webflow.io/',
   'https://secure.sportdogfood.com' // Added the secure subdomain
 ];
 
@@ -115,19 +117,13 @@ app.post('/proxy/ups/token', async (req, res) => {
     res.status(error.response?.status || 500).json({ error: error.message });
   }
 });
-// Route to proxy People API requests
+
+
 app.get('/proxy/people/:personId', async (req, res) => {
   const { personId } = req.params;
-  // Expect show_id and customer_id as query parameters, for example:
-  // /proxy/people/8778?show_id=200000007&customer_id=15
   const { show_id, customer_id } = req.query;
-
-  // Construct the target URL using the provided parameters.
-  // Note the use of https:// in the target URL.
   const targetUrl = `https://sglapi.wellingtoninternational.com/people/${personId}?pid=${personId}&show_id=${show_id}&customer_id=${customer_id}`;
-
   console.log('Proxying People request to:', targetUrl);
-
   try {
     const response = await axios.get(targetUrl, {
       headers: { 'Accept': 'application/json' }
@@ -142,6 +138,7 @@ app.get('/proxy/people/:personId', async (req, res) => {
     }
   }
 });
+
 
 // Route to handle UPS tracking requests
 app.get('/proxy/ups/track/:inquiryNumber', async (req, res) => {
