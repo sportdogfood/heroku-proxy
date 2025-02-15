@@ -150,6 +150,7 @@ app.get('/proxy/ups/track/:inquiryNumber', async (req, res) => {
   }
 });
 
+
 // Handle favicon.ico requests to prevent unnecessary logs
 app.get('/favicon.ico', (req, res) => res.sendStatus(204));
 
