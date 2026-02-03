@@ -7,152 +7,139 @@ const app = express();
 
 // Middleware to parse JSON bodies
 app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
-// CORS configuration
+// --------------------
+// CORS configuration (FIXED: single CORS middleware, uses your allowlist)
+// --------------------
 const allowedOrigins = [
   'https://www.sportdogfood.com',
   'https://sportdogfood.com',
   'http://www.sportdogfood.com',
   'http://sportdogfood.com',
-
-  'https://secure.sportdogfood.com' // Added the secure subdomain
+  'https://tackready.webflow.io',
+  'https://secure.sportdogfood.com',
 ];
 
 const corsOptions = {
-  origin: function (origin, callback) {
-    if (!origin) {
-      // Allow non-browser requests like curl or Postman
-      return callback(null, true);
-    }
-    if (allowedOrigins.includes(origin)) {
-      callback(null, true);
-    } else {
-      console.log(`Disallowed origin: ${origin}`);
-      callback(new Error('CORS policy: This origin is not allowed.'));
-    }
+  origin(origin, callback) {
+    if (!origin) return callback(null, true); // curl/postman
+    if (allowedOrigins.includes(origin)) return callback(null, true);
+    console.log(`Disallowed origin: ${origin}`);
+    return callback(new Error('CORS policy: This origin is not allowed.'));
   },
-  methods: ['POST', 'GET', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'fx-customer'], // Allow fx-customer in headers
+  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'fx-customer'],
 };
 
-// Use the CORS middleware
 app.use(cors(corsOptions));
-
-// Handle preflight OPTIONS request
 app.options('*', cors(corsOptions));
 
-// Helper function for proxy requests
+// --------------------
+// Airtable env (FIXED: no duplicate CORS blocks, env checks stay)
+// --------------------
+const AIRTABLE_API_KEY = process.env.AIRTABLE_API_KEY;
+const AIRTABLE_BASE_ID = process.env.AIRTABLE_BASE_ID;
+const AIRTABLE_HORSES_TABLE = process.env.AIRTABLE_HORSES_TABLE || 'tblliyUZ1ZS88Kfvl';
+
+if (!AIRTABLE_API_KEY || !AIRTABLE_BASE_ID) {
+  console.error('Error: Missing AIRTABLE_API_KEY or AIRTABLE_BASE_ID.');
+  process.exit(1);
+}
+
+// --------------------
+// Airtable helper
+// --------------------
+const makeAirtableRequest = async (method, path, params = null, data = null) => {
+  const url = `https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/${path}`;
+  const headers = {
+    Authorization: `Bearer ${AIRTABLE_API_KEY}`,
+    'Content-Type': 'application/json',
+  };
+
+  const config = { method, url, headers };
+  if (params) config.params = params;
+  if (data && !['GET', 'HEAD'].includes(method.toUpperCase())) config.data = data;
+
+  try {
+    const response = await axios(config);
+    return response.data;
+  } catch (error) {
+    if (error.response) throw { status: error.response.status, data: error.response.data };
+    throw { status: 500, data: { message: 'Internal Server Error' } };
+  }
+};
+
+// --------------------
+// Zoho Flow proxy helper
+// --------------------
 const handleProxyRequest = async (req, res, targetWebhookURL) => {
   try {
     const clientPayload = req.body;
 
     if (!clientPayload || typeof clientPayload !== 'object') {
-      return res.status(400).json({ success: false, message: "Invalid payload provided." });
+      return res.status(400).json({ success: false, message: 'Invalid payload provided.' });
     }
 
     const params = {
       zapikey: process.env.ZAPIKEY || 'default-key',
-      isdebug: false
+      isdebug: false,
     };
 
     const response = await axios.post(targetWebhookURL, clientPayload, {
-      params: params,
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      timeout: 30000 // 30 seconds timeout
+      params,
+      headers: { 'Content-Type': 'application/json' },
+      timeout: 30000,
     });
 
-    res.status(response.status).json(response.data);
+    return res.status(response.status).json(response.data);
   } catch (error) {
-    console.error("Proxy error:", error.message, error.response ? error.response.data : '');
+    console.error('Proxy error:', error.message, error.response ? error.response.data : '');
 
     if (error.response) {
-      res.status(error.response.status).json({ message: error.response.data });
+      return res.status(error.response.status).json({ message: error.response.data });
     } else if (error.request) {
-      res.status(500).json({ success: false, message: "No response received from the target webhook." });
+      return res.status(500).json({ success: false, message: 'No response received from the target webhook.' });
     } else {
-      res.status(500).json({ success: false, message: error.message });
+      return res.status(500).json({ success: false, message: error.message });
     }
   }
 };
 
-// Proxy endpoint for POST requests
+// --------------------
+// Proxy endpoints
+// --------------------
 app.post('/proxy', (req, res) => {
   const targetWebhookURL = 'https://flow.zoho.com/681603876/flow/webhook/incoming';
   handleProxyRequest(req, res, targetWebhookURL);
 });
 
-// Proxy endpoint for POST requests with different params
 app.post('/proxy/recover', (req, res) => {
   const targetWebhookURL = 'https://flow.zoho.com/681603876/flow/webhook/incoming';
   handleProxyRequest(req, res, targetWebhookURL);
 });
 
-// Route to handle UPS token requests
-app.post('/proxy/ups/token', async (req, res) => {
-  const upsTokenURL = 'https://wwwcie.ups.com/security/v1/oauth/token';
-  const { ups_clientId, ups_clientSecret } = process.env;
-
-  if (!ups_clientId || !ups_clientSecret) {
-    console.error('Missing UPS Client ID or Secret in environment variables.');
-    return res.status(500).json({ error: 'UPS Client ID and Secret are required in environment variables.' });
-  }
-
+// --------------------
+// Airtable test route
+// --------------------
+app.get('/airtable/ping', async (req, res) => {
   try {
-    const response = await axios.post(
-      upsTokenURL,
-      new URLSearchParams({
-        grant_type: 'client_credentials',
-        client_id: ups_clientId,
-        client_secret: ups_clientSecret,
-      }),
-      { headers: { 'Content-Type': 'application/x-www-form-urlencoded' } }
-    );
-    console.log('UPS Token Request Successful:', response.data);
-    res.status(response.status).json(response.data);
+    const data = await makeAirtableRequest('GET', AIRTABLE_HORSES_TABLE, { pageSize: 1 });
+    res.json({ success: true, message: 'Airtable OK', sample: data?.records?.[0] || null });
   } catch (error) {
-    console.error('UPS Token Request Error:', error.message);
-    res.status(error.response?.status || 500).json({ error: error.message });
-  }
-});
-
-
-
-// Route to handle UPS tracking requests
-app.get('/proxy/ups/track/:inquiryNumber', async (req, res) => {
-  const { inquiryNumber } = req.params;
-  const upsTrackingURL = `https://wwwcie.ups.com/api/track/v1/details/${inquiryNumber}`;
-  const { token } = req.headers; // Include the UPS Bearer token in the request
-
-  if (!token) {
-    return res.status(400).json({ success: false, message: 'Bearer token is required in headers.' });
-  }
-
-  try {
-    const response = await axios.get(upsTrackingURL, {
-      headers: {
-        'Authorization': `Bearer ${token}`,
-        'Content-Type': 'application/json',
-      },
-      params: {
-        locale: 'en_US',
-        returnSignature: false,
-        returnMilestones: false,
-        returnPOD: false,
-      },
+    res.status(error.status || 500).json({
+      success: false,
+      message: 'Airtable failed',
+      details: error.data,
     });
-    console.log('UPS Tracking Request Successful:', response.data);
-    res.status(response.status).json(response.data);
-  } catch (error) {
-    console.error('UPS Tracking Request Error:', error.message);
-    res.status(error.response?.status || 500).json({ error: error.message });
   }
 });
 
-
-// Handle favicon.ico requests to prevent unnecessary logs
+// Handle favicon.ico requests
 app.get('/favicon.ico', (req, res) => res.sendStatus(204));
+
+// Root (optional)
+app.get('/', (req, res) => res.send('Proxy server running.'));
 
 // Start the server
 const PORT = process.env.PORT || 3000;
