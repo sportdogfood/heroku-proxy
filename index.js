@@ -229,11 +229,13 @@ const AIRTABLE_STALLCARDS_TABLE =
 // --------------------
 
 // 1) List (GET first N, default view=approved, max 100)
+// 1) List (GET first N, default view=approved, max 100)
 app.get('/airtable/stallcards', async (req, res) => {
   try {
     const pageSize = Math.max(1, Math.min(parseInt(req.query.pageSize || '100', 10), 100));
     const view = req.query.view ? String(req.query.view) : 'approved';
-  // Only return the fields the mobile UI needs
+
+    // Only return the fields the mobile UI needs
     const fields = [
       'horse',
       'horseName',
@@ -244,15 +246,18 @@ app.get('/airtable/stallcards', async (req, res) => {
       'input_barnName',
       'recordID',
     ];
-    
-    const params = { pageSize, view };
+
+    const params = { pageSize, view, fields };
 
     const data = await airtableReq('GET', AIRTABLE_STALLCARDS_TABLE, params);
     res.json({ success: true, records: data?.records || [] });
   } catch (err) {
-    res.status(err.status || 500).json({ success: false, message: 'List failed', details: err.data });
+    res
+      .status(err.status || 500)
+      .json({ success: false, message: 'List failed', details: err.data });
   }
 });
+
 
 // 2) Get 1 record
 app.get('/airtable/stallcards/:recordId', async (req, res) => {
