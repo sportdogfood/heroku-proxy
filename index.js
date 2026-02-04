@@ -239,11 +239,13 @@ app.get('/airtable/stallcards', async (req, res) => {
     const fields = [
       'horse',
       'horseName',
+      'showName',
       'horseID',
       'input_discipline',
       'input_gender',
       'input_color',
       'input_barnName',
+      'input_showName',
       'recordID',
     ];
 
