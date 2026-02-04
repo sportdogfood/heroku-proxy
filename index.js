@@ -233,7 +233,18 @@ app.get('/airtable/stallcards', async (req, res) => {
   try {
     const pageSize = Math.max(1, Math.min(parseInt(req.query.pageSize || '100', 10), 100));
     const view = req.query.view ? String(req.query.view) : 'approved';
-
+  // Only return the fields the mobile UI needs
+    const fields = [
+      'horse',
+      'horseName',
+      'horseID',
+      'input_discipline',
+      'input_gender',
+      'input_color',
+      'input_barnName',
+      'recordID',
+    ];
+    
     const params = { pageSize, view };
 
     const data = await airtableReq('GET', AIRTABLE_STALLCARDS_TABLE, params);
