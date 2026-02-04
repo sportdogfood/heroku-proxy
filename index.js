@@ -219,6 +219,100 @@ app.post('/airtable/horses', async (req, res) => {
 });
 
 // --------------------
+// Stallcards table
+// --------------------
+const AIRTABLE_STALLCARDS_TABLE =
+  process.env.AIRTABLE_STALLCARDS_TABLE || 'tbldfkyqm07gBqFWY';
+
+// --------------------
+// Airtable stallcards routes
+// --------------------
+
+// 1) List (GET first N, default view=approved, max 100)
+app.get('/airtable/stallcards', async (req, res) => {
+  try {
+    const pageSize = Math.max(1, Math.min(parseInt(req.query.pageSize || '100', 10), 100));
+    const view = req.query.view ? String(req.query.view) : 'approved';
+
+    const params = { pageSize, view };
+
+    const data = await airtableReq('GET', AIRTABLE_STALLCARDS_TABLE, params);
+    res.json({ success: true, records: data?.records || [] });
+  } catch (err) {
+    res.status(err.status || 500).json({ success: false, message: 'List failed', details: err.data });
+  }
+});
+
+// 2) Get 1 record
+app.get('/airtable/stallcards/:recordId', async (req, res) => {
+  try {
+    const recordId = String(req.params.recordId || '').trim();
+    if (!recordId) return res.status(400).json({ success: false, message: 'Missing recordId' });
+
+    const data = await airtableReq(
+      'GET',
+      `${AIRTABLE_STALLCARDS_TABLE}/${encodeURIComponent(recordId)}`
+    );
+
+    res.json({ success: true, record: data });
+  } catch (err) {
+    res.status(err.status || 500).json({ success: false, message: 'Fetch failed', details: err.data });
+  }
+});
+
+// 3) Patch record (expects { fields: {...} })
+app.patch('/airtable/stallcards/:recordId', async (req, res) => {
+  try {
+    const recordId = String(req.params.recordId || '').trim();
+    if (!recordId) return res.status(400).json({ success: false, message: 'Missing recordId' });
+
+    const fields = (req.body && typeof req.body === 'object' && req.body.fields && typeof req.body.fields === 'object')
+      ? req.body.fields
+      : null;
+
+    if (!fields) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid body. Send { "fields": { ... } }',
+      });
+    }
+
+    const data = await airtableReq(
+      'PATCH',
+      `${AIRTABLE_STALLCARDS_TABLE}/${encodeURIComponent(recordId)}`,
+      null,
+      { fields }
+    );
+
+    res.json({ success: true, record: data });
+  } catch (err) {
+    res.status(err.status || 500).json({ success: false, message: 'Patch failed', details: err.data });
+  }
+});
+
+// 4) Create record (expects { fields: {...} })
+app.post('/airtable/stallcards', async (req, res) => {
+  try {
+    const fields = (req.body && typeof req.body === 'object' && req.body.fields && typeof req.body.fields === 'object')
+      ? req.body.fields
+      : null;
+
+    if (!fields) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid body. Send { "fields": { ... } }',
+      });
+    }
+
+    const data = await airtableReq('POST', AIRTABLE_STALLCARDS_TABLE, null, { fields });
+    res.status(201).json({ success: true, record: data });
+  } catch (err) {
+    res.status(err.status || 500).json({ success: false, message: 'Create failed', details: err.data });
+  }
+});
+
+
+// --------------------
 // Existing proxy helper (safer: doesn't add zapikey unless provided)
 // --------------------
 const handleProxyRequest = async (req, res, targetWebhookURL, apiKey) => {
