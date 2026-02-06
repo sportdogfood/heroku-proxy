@@ -526,6 +526,126 @@ app.post('/proxy/enriched-data', (req, res) => {
   console.log('Enriched Data Received:', enrichedData);
   res.status(200).json({ success: true, message: 'Enriched data received successfully.' });
 });
+// ====================
+// DATASET INDEX ROUTES (GitHub raw -> proxy) 
+// ====================
+
+// Repo defaults (override via env if needed)
+const DATASET_REPO_OWNER  = process.env.DATASET_REPO_OWNER  || 'sportdogfood';
+const DATASET_REPO_NAME   = process.env.DATASET_REPO_NAME   || 'clear-round-datasets';
+const DATASET_REPO_BRANCH = process.env.DATASET_REPO_BRANCH || 'main';
+
+// Optional (only needed if repo is private)
+const DATASET_GITHUB_TOKEN =
+  process.env.DATASET_GITHUB_TOKEN || process.env.GITHUB_TOKEN || '';
+
+// Cache
+const DATASET_CACHE_TTL_MS = Math.max(
+  0,
+  parseInt(process.env.DATASET_CACHE_TTL_MS || '60000', 10) || 60000
+);
+const datasetCache = new Map(); // key -> { ts, data }
+
+const ALLOWED_DATASET_INDEX_NAMES = new Set([
+  'riders_index',
+  'horses_index',
+  'horse_index',
+  'stallcards_index',
+  'feedboards_index',
+  'tacklists_index',
+  'turnouts_index',
+  'lessonlists_index',
+  'showactive_index',
+]);
+
+function ghRawUrl(repoPath) {
+  const p = String(repoPath || '').replace(/^\/+/, '');
+  return `https://raw.githubusercontent.com/${DATASET_REPO_OWNER}/${DATASET_REPO_NAME}/${DATASET_REPO_BRANCH}/${p}`;
+}
+
+async function fetchJsonWithCache(cacheKey, url) {
+  const now = Date.now();
+  const hit = datasetCache.get(cacheKey);
+  if (hit && (now - hit.ts) < DATASET_CACHE_TTL_MS) return hit.data;
+
+  const headers = {};
+  if (DATASET_GITHUB_TOKEN) headers.Authorization = `token ${DATASET_GITHUB_TOKEN}`;
+
+  const r = await axios.get(url, { headers, timeout: 20000 });
+  const data = r.data;
+
+  datasetCache.set(cacheKey, { ts: now, data });
+  return data;
+}
+
+// Tries datasets folder first, then latest folder (fallback)
+async function loadDatasetIndex(name) {
+  const file = `${name}.json`;
+
+  const primaryPath = `docs/schedule/data/datasets/${file}`;
+  const fallbackPath = `docs/schedule/data/latest/${file}`;
+
+  const primaryUrl = ghRawUrl(primaryPath);
+  try {
+    return await fetchJsonWithCache(`datasets:${primaryPath}`, primaryUrl);
+  } catch (e) {
+    // If GitHub returned 404, try fallback; otherwise rethrow
+    const status = e?.response?.status;
+    if (status !== 404) throw e;
+
+    const fallbackUrl = ghRawUrl(fallbackPath);
+    return await fetchJsonWithCache(`datasets:${fallbackPath}`, fallbackUrl);
+  }
+}
+
+function setDatasetHeaders(res) {
+  // TTL in seconds, aligned to the in-memory cache
+  const s = Math.max(0, Math.floor(DATASET_CACHE_TTL_MS / 1000));
+  res.set('Content-Type', 'application/json; charset=utf-8');
+  res.set('Cache-Control', `public, max-age=${s}`);
+}
+
+// Route style A: proxy-mirror path
+app.get('/docs/schedule/data/datasets/:name.json', async (req, res) => {
+  try {
+    const name = String(req.params.name || '').trim();
+    if (!ALLOWED_DATASET_INDEX_NAMES.has(name)) {
+      return res.status(404).json({ success: false, message: 'Not Found', name });
+    }
+
+    const data = await loadDatasetIndex(name);
+    setDatasetHeaders(res);
+    return res.json(data);
+  } catch (e) {
+    const status = e?.response?.status || 500;
+    return res.status(status).json({
+      success: false,
+      message: 'Dataset fetch failed',
+      details: e?.response?.data || e?.message || String(e),
+    });
+  }
+});
+
+// Route style B: short path
+app.get('/datasets/:name', async (req, res) => {
+  try {
+    const name = String(req.params.name || '').trim();
+    if (!ALLOWED_DATASET_INDEX_NAMES.has(name)) {
+      return res.status(404).json({ success: false, message: 'Not Found', name });
+    }
+
+    const data = await loadDatasetIndex(name);
+    setDatasetHeaders(res);
+    return res.json(data);
+  } catch (e) {
+    const status = e?.response?.status || 500;
+    return res.status(status).json({
+      success: false,
+      message: 'Dataset fetch failed',
+      details: e?.response?.data || e?.message || String(e),
+    });
+  }
+});
 
 // favicon
 app.get('/favicon.ico', (req, res) => res.sendStatus(204));
